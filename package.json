@@ -1,0 +1,43 @@
+{
+	"name": "cardsagainstai",
+	"version": "1.0.0",
+	"description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": "nodemon server/index.js",
+		"server": "node server/index.js",
+		"client": "cd client && npm run start",
+		"build:client": "sudo rm -rf build && cd client && npm run build --prod && cp -r build ../",
+		"startboth": "npm run server & npm run client",
+		"deploy": "git push heroku master",
+		"deploy:full": "npm run build:client && git add . && git commit -m fullbuild && npm run deploy"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/NauqGnesh/cardsagainstai.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/NauqGnesh/cardsagainstai/issues"
+	},
+	"homepage": "https://github.com/NauqGnesh/cardsagainstai#readme",
+	"dependencies": {
+		"cors": "^2.8.5",
+		"dotenv": "^8.2.0",
+		"express": "^4.17.1",
+		"express-async-errors": "^3.1.1",
+		"jsonwebtoken": "^8.5.1",
+		"nodemon": "^2.0.7"
+	},
+	"devDependencies": {
+		"eslint": "^7.21.0",
+		"eslint-config-airbnb": "^18.2.1",
+		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-jsx-a11y": "^6.4.1",
+		"eslint-plugin-react": "^7.22.0",
+		"eslint-plugin-react-hooks": "^4.2.0"
+	}
+}
