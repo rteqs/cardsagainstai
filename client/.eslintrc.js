@@ -13,7 +13,7 @@ module.exports = {
   },
   plugins: ['react', 'prettier'],
   rules: {
-    'prettier/prettier': 'error',
+    'prettier/prettier': ['error', { endOfLine: 'auto' }],
     // suppress errors for missing 'import React' in files
     'react/react-in-jsx-scope': 'off',
     // allow jsx syntax in js files (for next.js project)
