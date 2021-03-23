@@ -2,12 +2,15 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import WhiteCard from './WhiteCardTemplate';
+import BlackCard from './BlackCardTemplate';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
     <App />
-    <App />
+    <BlackCard />
+    <WhiteCard />
   </React.StrictMode>,
   document.getElementById('root')
 );

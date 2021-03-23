@@ -3,4 +3,6 @@ module.exports = {
   semi: true,
   singleQuote: true,
   trailingComma: 'es5',
+  //rules: {'prettier/prettier': ['error', {endOfLine: 'auto'}]},
+  //"endOfLine": "auto",
 };

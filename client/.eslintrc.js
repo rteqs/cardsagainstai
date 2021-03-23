@@ -13,11 +13,15 @@ module.exports = {
   },
   plugins: ['react', 'prettier'],
   rules: {
-    'prettier/prettier': ['error', { endOfLine: 'auto' }],
+    'prettier/prettier': 0,
+    //'prettier/prettier': ['error', { endOfLine: 'auto' }],
     // suppress errors for missing 'import React' in files
     'react/react-in-jsx-scope': 'off',
     // allow jsx syntax in js files (for next.js project)
     'react/jsx-filename-extension': [1, { extensions: ['.js', '.jsx'] }], // should add ".ts" if typescript project
   },
+  // "rules": {     
+  //   "prettier/prettier": ["error", { "endOfLine": "auto" }]   
+  // },
   root: true,
 };
