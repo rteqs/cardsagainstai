@@ -2,6 +2,7 @@ function WhiteCardTemplate(text)
 {
 	const holdText = "Tal and his emoji scheduling."
 	const outerDivStyle = {
+		float: 'left',
 		margin: '40px',
   		border: '2px solid pink',
   		height: '300px',

@@ -7,11 +7,18 @@ import BlackCard from './BlackCardTemplate';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-    <BlackCard />
-    <WhiteCard />
-  </React.StrictMode>,
+	  <React.StrictMode>
+	  	<App />
+	  	<div id="out" className="outerContainer" style={{backgroundColor: "#ffa0ff", overflow: "hidden"}}>
+		  	<div className="blackContainer" style={{backgroundColor: "#a0a0ff", overflow: "hidden"}}>
+		  		<BlackCard />
+		    </div>
+		    <div className="whiteContainer" style={{backgroundColor: "#ffa0a0", overflow: "hidden"}}>
+		    	<WhiteCard />
+		   		<WhiteCard />
+		    </div>
+	    </div>
+	  </React.StrictMode>,
   document.getElementById('root')
 );
 

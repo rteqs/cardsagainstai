@@ -2,6 +2,7 @@ function BlackCardTemplate(text)
 {
 	const holdText = "The greatest accomplisment DG has is ______."
 	const outerDivStyle = {
+    float: 'left',
 		margin: '40px',
   		border: '2px solid pink',
   		height: '300px',
