@@ -30,9 +30,9 @@ wss.on('connection', (ws) => {
   });
   // Receiving message from client
   ws.on('message', (event) => {
-    const response = JSON.parse(event.data);
+    const response = JSON.parse(event)
     console.log('Message from server ', response);
-    switch (response.method) {
+    switch (response.data.method) {
       case 'create':
         // const game = initializeGame
         break;

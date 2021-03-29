@@ -1,0 +1,46 @@
+<h1>Test Websocket Messaging</h1>
+<pre id="response"></pre>
+<!-- <input type="text" id="messageBox" placeholder="Type message here"></input> -->
+<button id="send">Send Create</button>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        const sendBtn = document.querySelector('#send')
+        const responseBox = document.querySelector('#response')
+        // const messageBox = document.querySelector('#messageBox')
+
+        let ws;
+
+        function showResponse(response) {
+            responseBox.textContent += `${response}\n\n`
+        }
+
+        function init() {
+            if (ws) {
+                ws.onerror = ws.onopen = ws.onclose = null;
+                ws.close();
+            }
+            ws = new WebSocket('ws://localhost:8080');
+            ws.onopen = () => {
+                console.log('Connection opened!');
+            }
+            ws.onmessage = ({ data }) => showResponse(`Recieved: ${JSON.stringify(data)}`);
+            ws.onclose = function() {
+                ws = null;
+            }
+        }
+
+        sendBtn.onclick = function() {
+            if (!ws) {
+                showResponse("No WebSocket connection")
+                return;
+            }
+
+            data = {'data': {'method': 'create'}}
+            ws.send(JSON.stringify(data));
+            showResponse(`Sent: ${JSON.stringify(data)}`)
+        }
+
+        init();
+    });
+</script>
