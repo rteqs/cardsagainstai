@@ -7,7 +7,7 @@ const logger = require('./utils/logger');
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
-
+// const gameObjects = {} (redis)
 function connectClient(ws) {
   const id = uuidv4();
   const payload = {
@@ -16,11 +16,6 @@ function connectClient(ws) {
   };
   ws.send(JSON.stringify(payload));
 }
-
-function handleCreate(ws) {}
-function handleJoin(ws) {}
-function handlePlay(ws) {}
-function handleLeave(ws) {}
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
@@ -39,9 +34,11 @@ wss.on('connection', (ws) => {
     console.log('Message from server ', response);
     switch (response.method) {
       case 'create':
+        // const game = initializeGame
         break;
 
       case 'join':
+        // game.handleJoin(ws)
         break;
 
       case 'leave':
