@@ -16,9 +16,9 @@ function Lobby() {
                     <div className="gameContainer">
                         <p>Name: {val.name}</p>
                         <div className="peopleContainer">
-                            Players:
+                            Players:⠀
                             {val.players.map((p, pindex) =>
-                                <p>{p.name}{(pindex < val.players.length - 1)? <span>,⠀</span>: <span />}</p>
+                                <div>{p.name}{(pindex < val.players.length - 1)? <span>,⠀</span>: <span />}</div>
                                 
                             )}
                         </div>

@@ -2,11 +2,11 @@ function BlackCardTemplate(args)
 {
 	const outerDivStyle = {
     float: 'left',
-		margin: '40px',
-  		height: '300px',
-  		width: '200px',
-  		backgroundColor:"#050505",
-      borderRadius: "10px"
+		margin: '20px',
+  	height: '250px',
+  	width: '200px',
+  	backgroundColor:"#050505",
+     borderRadius: "10px"
   	}
 	const innerDivStyle = {
     marginRight: '10px',

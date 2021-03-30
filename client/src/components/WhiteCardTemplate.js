@@ -1,9 +1,10 @@
+
 function WhiteCardTemplate(args)
 {
 	const outerDivStyle = {
 		float: 'left',
-		margin: '40px',
-  		height: '300px',
+		margin: '20px',
+  		height: '250px',
   		width: '200px',
   		backgroundColor:"#fafafa",
 		borderRadius: "10px"
@@ -15,7 +16,7 @@ function WhiteCardTemplate(args)
   	}
 	console.log(args)
 	return (
-    	<div className="Card" style={outerDivStyle}>
+    	<div className="gameCards" style={outerDivStyle}>
     		<div style = {innerDivStyle}>
 	      		<header className="A card">
 	        		<p>

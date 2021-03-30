@@ -1,16 +1,30 @@
 .whiteContainer { 
-    background-color: #a0a0ff;
-    overflow: hidden;
-    height: 50vh;
-}
-
-.blackContainer { 
-    background-color: #ffa0a0;
-    overflow: hidden;
-    height: 50vh;
+    width: 60%;
+    overflow-x: hidden;
 }
 
 .gameScreenWrapper {
+    display: inline-flex;
+    padding: 10vh; 
+    background-color: #ffa0a0;
     height: 100%;
-    overflow-y: hidden;
+    width: 89.5vw;
+    overflow-x: hidden;
+
+}
+
+
+.gameScoreboard {
+    background-color: white;
+    float: right;
+    margin: 20px;
+    height: 250px;
+    width: 19%;
+    background-color:#fafafa;
+    border-radius: 10px;
+    border: 2px dashed black;
+    padding: 10px;
+    text-align: center;
+    font-size: larger;
+    overflow-x: hidden;
 }
