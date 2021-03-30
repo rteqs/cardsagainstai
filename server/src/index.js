@@ -35,16 +35,22 @@ wss.on('connection', (ws) => {
   ws.on('message', (event) => {
     const response = JSON.parse(event)
     console.log('Message from server ', response);
-    let currentGame = null;
+    let currentGame = player = null;
     switch (response.requestType) {
       case 'createGame':
         currentGame = game.initializeGame()
         redisUtil.addGame(currentGame)
         ws.send(JSON.stringify({"event": "gameCreated", "data": {"game": currentGame}}))
         break;
+      case 'joinGame':
+        currentGame = redisUtil.getGame(response.gameId)
+        player = currentGame.addPlayer(ws)
+        redisUtil.updateGame(currentGame)
+        ws.send(JSON.stringify({'event': "joinedGame", "data": {"player": player}}))
+        break;
       case 'addNewPlayer':
         currentGame = redisUtil.getGame(response.gameId)
-        const player = currentGame.addPlayer(ws)
+        player = currentGame.addPlayer(ws)
         redisUtil.updateGame(currentGame)
         ws.send(JSON.stringify({'event': "newPlayerAdded", "data": {"player": player}}))
         break;

@@ -1,4 +1,8 @@
 <h1>Test Websocket Messaging</h1>
+<div>
+    <input id='gameId' placeholder="Game Id to join"/>
+    <button id='joinGame'>Join Game</button>
+</div>
 <button id='createGame'>Create New Game</button>
 <button id='addNewPlayer'>Add Player</button>
 <button id='pickCzar'>Pick Czar</button>
@@ -23,12 +27,15 @@
         }
 
         function displayGame(game) {
+            // console.log(JSON.stringify(game, undefined, 2))
             let gameRep = []
             gameRep.push('Game id: ' + game.gameId)
             gameRep.push('Czar: ' + game.czar.playerId)
             gameRep.push('Players: ')
             game.players.forEach(player => {
-                gameRep.push('    PlayerId: ' + player.playerId)
+                console.log("Player hand: " + player.hand)
+                gameRep.push('\tPlayerId: ' + player.playerId)
+                gameRep.push('\t\tCards: ' + player.hand.map(cardSum).join(", "))
             });
             function cardSum(card) {
                 //return "\t- " + card.text 
@@ -55,6 +62,10 @@
             }
         }
 
+        document.querySelector('#joinGame').onclick = function() {
+            gameId = document.querySelector('#gameId').value
+            sendRequest('joinGame')
+        }
         document.querySelector('#createGame').onclick = function() { sendRequest('createGame') }
         document.querySelector('#addNewPlayer').onclick = function() { sendRequest('addNewPlayer') }
         document.querySelector('#pickCzar').onclick = function() { sendRequest('pickCzar') }
@@ -73,6 +84,7 @@
                     ws.send(JSON.stringify(data));
                     logEvent(`Sent ${requestType} request`)
                     break;
+                case 'joinGame':
                 case 'addNewPlayer':
                 case 'pickCzar':
                 case 'startGame':
@@ -103,6 +115,10 @@
                 case 'gameCreated':
                     gameId = response.data.game.gameId
                     logEvent(`Game created with id: ${gameId}`)
+                    break;
+                case 'joinedGame':
+                    playerId = response.data.player.playerId
+                    logEvent(`Player created and joined with id: ${playerId}`)
                     break;
                 case 'newPlayerAdded':
                     playerId = response.data.player.playerId

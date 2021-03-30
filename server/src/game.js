@@ -13,8 +13,8 @@ function Game() {
     // gathered white cards, num_players * totalRounds = 469 total
     answerCards: [], // number (cardId) | Array
     // currentAnswerCards: [], // number (cardId) | Array
-		currentAnswerCards: {}, // object {cardId: playerId} 
-		currentQuestionCard: 0, //number (cardId)
+		currentAnswerCardsMap: {}, // object {cardId: playerId} 
+		currentQuestionCard: null, // card object
     turnNum: 0,
   };
   this.timestamp = new Date();
@@ -27,6 +27,7 @@ function Game() {
  * @params ws
  */
 Game.prototype.start = function (ws, redis) {
+  const fullHandSize = 10
   const numPlayers = this.players.length
   const targetPoints = 5
   const totalRounds = numPlayers * (targetPoints - 1) + targetPoints
@@ -34,9 +35,10 @@ Game.prototype.start = function (ws, redis) {
   this.board.questionCards = redis.getQuestionCards(totalRounds)
   const numWhiteCards = numPlayers * totalRounds
   this.board.answerCards = redis.getAnswerCards(numWhiteCards)
-  // 2. Deal cards 
-	// 3. Deal Black card 
-	// 4. updateBoard
+  // 2. Deal cards (including black)
+  this.currentQuestionCard = this.board.questionCards.pop()
+  this.players = this.replenishHand(this.players, fullHandSize)
+
 	// 5. wait for all player to play a card (except Czar): handleSelect
 	// 6. updateBoard // show all played white Cards
 	// 7. Turn to state to judging
@@ -67,11 +69,17 @@ Game.prototype.pickCzar = function () {
 
 
 /**
- * Deals cards to players until they have 10 cards
+ * Deals cards to players until they have fullHandSize cards
+ * @param fullHandSize Number of cards to replenish to
  * @returns List of players
  */
-Game.prototype.replenishHand = function (players) {
-
+Game.prototype.replenishHand = function (players, fullHandSize) {
+  players.forEach(player => {
+    while (player.hand.length < fullHandSize) {
+      player.hand.push(this.board.answerCards.pop())
+    }
+  });
+  return players
 }
 
 /**
