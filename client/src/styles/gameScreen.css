@@ -13,6 +13,11 @@
 
 }
 
+.gameWhiteCard:hover {
+    transform: rotate(5deg);
+    cursor: pointer;
+}
+
 
 .gameScoreboard {
     background-color: white;
