@@ -8,7 +8,9 @@ function Game() {
   this.czar = null; // Player object
   this.players = []; // Player | Array
   this.board = {
+    // gathered black cards,totalRounds = 41 (for numPlayers = 10, targetPoints = 5)
     questionCards: [], // number (cardId) | Array
+    // gathered white cards, num_players * totalRounds = 469 total
     answerCards: [], // number (cardId) | Array
     // currentAnswerCards: [], // number (cardId) | Array
 		currentAnswerCards: {}, // object {cardId: playerId} 
@@ -24,8 +26,14 @@ function Game() {
  * Game loop
  * @params ws
  */
-Game.prototype.start = function (ws) {
+Game.prototype.start = function (ws, redis) {
+  const numPlayers = this.players.length
+  const targetPoints = 5
+  const totalRounds = numPlayers * (targetPoints - 1) + targetPoints
 	// 1. Load cards from DB
+  this.board.questionCards = redis.getQuestionCards(totalRounds)
+  const numWhiteCards = numPlayers * totalRounds
+  this.board.answerCards = redis.getAnswerCards(numWhiteCards)
   // 2. Deal cards 
 	// 3. Deal Black card 
 	// 4. updateBoard
@@ -123,10 +131,9 @@ Game.prototype.checkAllPlayers = function () {
  */
 function initializeGame() {
   const game = new Game();
-  // some funtions
   return game;
 }
 
 module.exports = {
-  initializeGame,
+  initializeGame
 };

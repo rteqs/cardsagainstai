@@ -6,6 +6,7 @@ const config = require('./utils/config');
 const logger = require('./utils/logger');
 
 const game = require('./game.js')
+const redisUtil = require('./utils/redis.js')
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -18,8 +19,6 @@ function connectClient(ws) {
   };
   ws.send(JSON.stringify(payload));
 }
-
-const currentGames = {}
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
@@ -40,15 +39,24 @@ wss.on('connection', (ws) => {
     switch (response.requestType) {
       case 'createGame':
         currentGame = game.initializeGame()
-        currentGames[currentGame.gameId] = currentGame
+        redisUtil.addGame(currentGame)
         ws.send(JSON.stringify({"event": "gameCreated", "data": {"game": currentGame}}))
         break;
       case 'addNewPlayer':
-        const player = currentGames[response.gameId].addPlayer(ws)
+        currentGame = redisUtil.getGame(response.gameId)
+        const player = currentGame.addPlayer(ws)
+        redisUtil.updateGame(currentGame)
         ws.send(JSON.stringify({'event': "newPlayerAdded", "data": {"player": player}}))
         break;
+      case 'startGame':
+        currentGame = redisUtil.getGame(response.gameId)
+        currentGame.start(ws, redisUtil)
+        redisUtil.updateGame(currentGame)
+        // console.log("Current game: " + JSON.stringify(currentGame, undefined, 2))
+        ws.send(JSON.stringify({'event': "gameStarted", "data": {"game": currentGame}}))
+        break;
       case 'pickCzar':
-        currentGame = currentGames[response.gameId]
+        currentGame = redisUtil.getGame(response.gameId)
         currentGame.pickCzar()
         // Loop through each player and send an appropriate event to each saying whether they were chosen to be czar or not
         currentGame.players.forEach(player => {
@@ -58,6 +66,10 @@ wss.on('connection', (ws) => {
           }
           player.ws.send(JSON.stringify(data))
         });
+        redisUtil.updateGame(currentGame)
+        break;
+      case 'getGameObj':
+        ws.send(JSON.stringify({'event': 'retrievedGameObj', 'data': {'game': redisUtil.getGame(response.gameId)}}))
         break;
       case 'join':
         // game.handleJoin(ws)
