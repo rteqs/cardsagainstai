@@ -5,17 +5,21 @@ const app = require('./app');
 const config = require('./utils/config');
 const logger = require('./utils/logger');
 
+const game = require('./game.js')
+
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 // const gameObjects = {} (redis)
 function connectClient(ws) {
   const id = uuidv4();
   const payload = {
-    method: 'connect',
+    event: 'connected',
     id,
   };
   ws.send(JSON.stringify(payload));
 }
+
+const currentGames = {}
 
 wss.on('connection', (ws) => {
   ws.isAlive = true;
@@ -32,11 +36,29 @@ wss.on('connection', (ws) => {
   ws.on('message', (event) => {
     const response = JSON.parse(event)
     console.log('Message from server ', response);
-    switch (response.data.method) {
-      case 'create':
-        // const game = initializeGame
+    let currentGame = null;
+    switch (response.requestType) {
+      case 'createGame':
+        currentGame = game.initializeGame()
+        currentGames[currentGame.gameId] = currentGame
+        ws.send(JSON.stringify({"event": "gameCreated", "data": {"game": currentGame}}))
         break;
-
+      case 'addNewPlayer':
+        const player = currentGames[response.gameId].addPlayer(ws)
+        ws.send(JSON.stringify({'event': "newPlayerAdded", "data": {"player": player}}))
+        break;
+      case 'pickCzar':
+        currentGame = currentGames[response.gameId]
+        currentGame.pickCzar()
+        // Loop through each player and send an appropriate event to each saying whether they were chosen to be czar or not
+        currentGame.players.forEach(player => {
+          const data = {'event': 'czarPicked', 'data': {'chosen': false}}
+          if (player.playerId === currentGame.czar.playerId) {
+            data.data.chosen = true
+          }
+          player.ws.send(JSON.stringify(data))
+        });
+        break;
       case 'join':
         // game.handleJoin(ws)
         break;

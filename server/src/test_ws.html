@@ -1,18 +1,17 @@
 <h1>Test Websocket Messaging</h1>
 <pre id="response"></pre>
 <!-- <input type="text" id="messageBox" placeholder="Type message here"></input> -->
-<button id="send">Send Create</button>
-
+<button id="createGame">Create New Game</button>
+<button id="addNewPlayer">Add Player</button>
+<button id="pickCzar">Pick Czar</button>
 <script>
     document.addEventListener("DOMContentLoaded", function(){
-        const sendBtn = document.querySelector('#send')
-        const responseBox = document.querySelector('#response')
-        // const messageBox = document.querySelector('#messageBox')
-
+        let gameId = null;
+        let playerId = null;
         let ws;
 
-        function showResponse(response) {
-            responseBox.textContent += `${response}\n\n`
+        function logEvent(response) {
+            document.querySelector('#response').textContent += `- ${response}\n`
         }
 
         function init() {
@@ -22,25 +21,74 @@
             }
             ws = new WebSocket('ws://localhost:8080');
             ws.onopen = () => {
+                logEvent('Connection opened!')
                 console.log('Connection opened!');
             }
-            ws.onmessage = ({ data }) => showResponse(`Recieved: ${JSON.stringify(data)}`);
+            ws.onmessage = ({ data }) => handleResponse(data)
             ws.onclose = function() {
                 ws = null;
             }
         }
 
-        sendBtn.onclick = function() {
+        document.querySelector('#createGame').onclick = function() { sendRequest('createGame') }
+        document.querySelector('#addNewPlayer').onclick = function() { sendRequest('addNewPlayer') }
+        document.querySelector('#pickCzar').onclick = function() { sendRequest('pickCzar') }
+
+        function sendRequest(requestType) {
             if (!ws) {
-                showResponse("No WebSocket connection")
+                logEvent("No WebSocket connection")
                 return;
             }
-
-            data = {'data': {'method': 'create'}}
-            ws.send(JSON.stringify(data));
-            showResponse(`Sent: ${JSON.stringify(data)}`)
+            
+            switch (requestType) {
+                case "createGame":
+                    data = {'requestType': requestType}
+                    ws.send(JSON.stringify(data));
+                    logEvent(`Sent ${requestType} request`)
+                    break;
+                case "addNewPlayer":
+                case "pickCzar":
+                    if (gameId == null) {
+                        logEvent("Need to join or create a game before making player.")
+                        return;
+                    }
+                    data = {'requestType': requestType, "gameId": gameId}
+                    ws.send(JSON.stringify(data));
+                    logEvent(`Sent ${requestType} request to gameId:${gameId}`)
+                    break;
+                default:
+                    logEvent(`Not sure what to do with ${requestType}`)
+                    return;
+            }            
         }
 
+        function handleResponse(data) {
+            const response = JSON.parse(data)
+            console.log("response.event = " + response.event)
+            switch (response.event) {
+                case "connected":
+                    logEvent("We are connected to the server!")
+                    break;
+                case "gameCreated":
+                    gameId = response.data.game.gameId
+                    logEvent(`Game created with id: ${gameId}`)
+                    break;
+                case "newPlayerAdded":
+                    playerId = response.data.player.playerId
+                    logEvent(`Player created and added with id: ${playerId}`)
+                    break;
+                case "czarPicked":
+                    if (response.data.chosen) {
+                        logEvent('I am the chosen one!')
+                    } else {
+                        logEvent('I am NOT the chosen one :(')
+                    }
+                    break;
+                default:
+                    logEvent(`Recieved: ${JSON.stringify(response, undefined, 2)}`);
+            }
+            
+        }
         init();
     });
 </script>

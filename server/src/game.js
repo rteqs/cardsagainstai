@@ -1,4 +1,9 @@
+const { v4: uuidv4 } = require('uuid');
+
+const playerUtil = require("./player");
+
 function Game() {
+  this.gameId = uuidv4(); // uuid
   this.state = 0; // PLAYING 1, JUDGING 2, IDLE 0
   this.czar = null; // Player object
   this.players = []; // Player | Array
@@ -7,7 +12,7 @@ function Game() {
     answerCards: [], // number (cardId) | Array
     // currentAnswerCards: [], // number (cardId) | Array
 		currentAnswerCards: {}, // object {cardId: playerId} 
-		currentQuestionCard: 0 //number (cardId)
+		currentQuestionCard: 0, //number (cardId)
     turnNum: 0,
   };
   this.timestamp = new Date();
@@ -38,15 +43,19 @@ Game.prototype.start = function (ws) {
  * @params ws WebSocket
  */
 Game.prototype.addPlayer = function (ws) {
-  // Generate player
-  // Add to list of player
+  const player = playerUtil.createPlayer(ws)
+  this.players.push(player)
+  return player;
 };
 
 /**
  * Picks a czar for the current round
  * @returns
  */
-Game.prototype.pickCzar = function (ws) {};
+Game.prototype.pickCzar = function () {
+  const czar = this.players[Math.floor(Math.random() * this.players.length)];
+  this.czar = czar;
+};
 
 
 /**
@@ -73,7 +82,8 @@ Game.prototype.handlePickWinningCard = function (players) {}
  * Add new player and update other players
  * @returns boolean
  */ 
-Game.prototype.handleJoin = function (ws){
+Game.prototype.handleJoin = function (ws) {
+
 }
 
 /**
