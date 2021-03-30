@@ -1,5 +1,5 @@
-const redis = require('redis');
-const { v4: uuidv4 } = require('uuid');
+// const redis = require('redis');
+// const { v4: uuidv4 } = require('uuid');
 
 // const client = redis.createClient();
 
@@ -12,6 +12,36 @@ const { v4: uuidv4 } = require('uuid');
 // });
 
 // TODO: Add redis functionality
+
+const csv = require('csv-parser');
+const fs = require('fs');
+
+const blackCards = []
+const whiteCards = []
+
+function loadBlackCardsFromFile() {
+  fs.createReadStream('./resources/blackcards.csv')
+    .pipe(csv())
+    .on('data', (row) => {
+      // console.log(row);
+      blackCards.push(row)
+    })
+    .on('end', () => {
+      console.log('CSV file successfully processed');
+    });
+}
+
+function loadWhiteCardsFromFile() {
+  fs.createReadStream('./resources/whitecards.csv')
+    .pipe(csv())
+    .on('data', (row) => {
+      // console.log(row);
+      whiteCards.push(row)
+    })
+    .on('end', () => {
+      console.log('CSV file successfully processed');
+    });
+}
 
 const games = {}
 
@@ -27,12 +57,26 @@ function updateGame(game) {
   addGame(game) // For now this just overrides the game
 }
 
+function getNCardsFromArray(n, array) {
+  var requestedSet = [];
+  for (var i = 0; i < n; i++) {
+    requestedSet.push(array[Math.floor(Math.random()*array.length)]);
+  }
+  return requestedSet;
+}
+
 function getQuestionCards(numCards) {
-  return [`TODO: ${numCards} question cards!`]
+  if (blackCards.length === 0) {
+    loadBlackCardsFromFile()
+  }
+  return getNCardsFromArray(numCards, blackCards)
 }
 
 function getAnswerCards(numCards) {
-  return [`TODO: ${numCards} answer cards!`]
+  if (whiteCards.length === 0) {
+    loadWhiteCardsFromFile()
+  }
+  return getNCardsFromArray(numCards, whiteCards)
 }
 
 module.exports = {

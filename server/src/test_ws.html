@@ -30,8 +30,12 @@
             game.players.forEach(player => {
                 gameRep.push('    PlayerId: ' + player.playerId)
             });
-            gameRep.push('Question Cards: ' + game.board.questionCards.length)
-            gameRep.push('Answer Cards: ' + game.board.answerCards.length)
+            function cardSum(card) {
+                //return "\t- " + card.text 
+                return card.id
+            }
+            gameRep.push('Question Cards: \n\t' + game.board.questionCards.map(cardSum).join(", "))
+            gameRep.push('Answer Cards: \n\t' + game.board.answerCards.map(cardSum).join(", "))
             document.querySelector('#gameDisplay').textContent = gameRep.join('\n')
         }
 
