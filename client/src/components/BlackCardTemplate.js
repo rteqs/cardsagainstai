@@ -1,13 +1,12 @@
-function BlackCardTemplate(text)
+function BlackCardTemplate(args)
 {
-	const holdText = "The greatest accomplisment DG has is ______."
 	const outerDivStyle = {
     float: 'left',
 		margin: '40px',
-  		border: '2px solid pink',
   		height: '300px',
   		width: '200px',
   		backgroundColor:"#050505",
+      borderRadius: "10px"
   	}
 	const innerDivStyle = {
     marginRight: '10px',
@@ -15,13 +14,13 @@ function BlackCardTemplate(text)
       width: '176px',
       color: 'white',
     }
-  console.log(text)
+  console.log(args)
   return (
       <div className="Card" style={outerDivStyle}>
         <div style = {innerDivStyle}>
             <header className="A card">
               <p>
-                {holdText}
+                {args.text}
               </p>
             </header>
           </div>
