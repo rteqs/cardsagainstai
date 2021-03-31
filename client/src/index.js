@@ -5,12 +5,13 @@ import { Route, Switch, BrowserRouter as Router } from 'react-router-dom'
 import reportWebVitals from './reportWebVitals';
 import Lobby from './pages/Lobby';
 import GameScreen from './pages/GameScreen';
-
+import CreateGame from './pages/CreateGame'
 
 ReactDOM.render(
 	<React.StrictMode>
 		<Router>
 			<Switch>
+				<Route path="/createGame/" component={CreateGame} />
 				<Route path="/games/:gameID" component={GameScreen} />
 				<Route path="/lobby" component={Lobby} />
 				<Route path="/" render={() =>

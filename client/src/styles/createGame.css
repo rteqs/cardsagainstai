@@ -1,0 +1,13 @@
+.createGameWrapper {
+    background-color: white;
+    color: black;
+    padding: 20vh;
+    font-family: 'Helvetica' !important;
+}
+
+.createGameTitle {
+    font-size: xx-large;
+    font-weight: black;
+    text-decoration: underline;
+}
+

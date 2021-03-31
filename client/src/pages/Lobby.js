@@ -12,6 +12,9 @@ function Lobby() {
 				CARDS AGAINST AI
 			</div>
             <div className="lobbyWrapper">
+                <button type="button" className="addGameContainer" onClick={() => { window.location.href = `/createGame/`; }}>
+                    Create A Game
+                </button>
                 {games.map((val) => 
                     <div className="gameContainer">
                         <p>Name: {val.name}</p>
