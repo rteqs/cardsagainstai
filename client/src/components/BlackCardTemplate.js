@@ -26,7 +26,7 @@ function BlackCardTemplate(args)
 	return (
     	<div className="gameCards" style={outerDivStyle}>
     		<div style = {innerDivStyle}>
-	      		<header className="A card">
+	      		<header>
 	        		<p>
 	         			{args.text}
 	        		</p>

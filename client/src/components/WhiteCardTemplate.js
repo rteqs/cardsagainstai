@@ -4,13 +4,14 @@ function WhiteCardTemplate(args)
 {
 	const outerDivStyle = {
 		float: 'left',
-		margin: '20px',
+		// margin: '20px',
   		height: '250px',
   		width: '200px',
   		backgroundColor:"#fafafa",
 		borderRadius: "10px",
 		position: 'relative',
 		transition: "rotation .1s ease-in-out",
+		border: "1px solid black",
   	}
   	const innerDivStyle = {
 		marginRight: '10px',
@@ -27,7 +28,7 @@ function WhiteCardTemplate(args)
 	return (
     	<div className="gameWhiteCard" style={outerDivStyle}>
     		<div style = {innerDivStyle}>
-	      		<header className="A card">
+	      		<header>
 	        		<p>
 	         			{args.text}
 	        		</p>

@@ -1,5 +1,6 @@
 class Api {
-   
+    static userID = "yousef";
+
     static getActiveGames() {
         return [
             {
@@ -15,6 +16,32 @@ class Api {
                 "goal": 8
             }
         ]
+    }
+
+    static createGame(name, goal, numAI) {
+        console.log(name);
+        console.log(goal);
+        console.log(numAI);
+
+        return "183028100";
+    }
+
+    static getGameInfo(gameID) {
+        console.log(gameID)
+        return {
+            blackCard: {"text": "niceoo"},
+            whiteCards: [{"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"},  {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "trash"}],
+            players: [{"name": "yousef", "userID": "yousef", "score": 2, "isCzar": true}, {"name": "mot", "userID": "mot", "score": 2, "isCzar": false}],
+            allPicked: true,
+        }
+    }
+
+    static pickWhiteCard(cardIndex) {
+        console.log(cardIndex);
+    }
+
+    static getUserID() {
+        return this.userID;
     }
 }
 
