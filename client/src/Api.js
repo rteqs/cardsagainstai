@@ -69,13 +69,17 @@ class Api {
             blackCard: {"text": "niceoo"},
             whiteCards: [{"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"},  {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "trash"}],
             players: [{"name": "yousef", "userID": "yousef", "score": 1, "isCzar": false}, {"name": "mot", "userID": "mot", "score": 2, "isCzar": false}],
-            allPicked: false,
+            allPicked: true,
             goal: 8,
         }
     }
 
     static pickWhiteCard(cardIndex) {
         console.log(cardIndex);
+    }
+
+    static endRound(index) {
+        console.log("new round:", index, "won");
     }
 
     static getUserID() {

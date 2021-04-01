@@ -28,6 +28,15 @@ export default class GameScreen extends React.Component {
                 currentPicked: -1,
                 isCzar: isCzar,
             });
+            this.pickWhiteCard = this.pickWhiteCard.bind(this)
+        }
+
+        pickWhiteCard(index) {
+            if (!this.state.isCzar) {
+                Api.pickWhiteCard(index)
+            } else {
+                Api.endRound(index)
+            }
         }
 
         render() {
@@ -41,7 +50,7 @@ export default class GameScreen extends React.Component {
                     {this.state.allPicked?
                         (this.state.isCzar? 
                             <div className="gameScreenTitle">You are the Czar, judge the following card combos:</div>
-                            : <div className="gameScreenTitle">Here are every players choices (the Czar is making their choice):</div>)
+                            : <div className="gameScreenTitle">The Czar is making their choice:</div>)
                         : (this.state.choicePicked?
                             <div className="gameScreenTitle">Waiting on other players to make their picks</div>
                             : <div className="gameScreenTitle">You are a player, pick the most suitable card combo:</div>)}
@@ -54,11 +63,12 @@ export default class GameScreen extends React.Component {
                             </div>
                             <div className="whiteContainer">
                                 <div className="whiteCardChooseContainer">
-                                    {this.state.allPicked? "Here are all players chosen white cards": "Choose from the following white cards:"}
-                                    {(this.state.currentPicked != -1) && (!this.state.choicePicked)? 
-                                    <button type="button" className="confirmChoiceButton" onClick={() => {Api.pickWhiteCard(this.state.currentPicked); const copy = this.state; copy.choicePicked =  true; this.setState(copy)}}>
-                                        Confirm Choice
-                                    </button> : <div />}
+                                    {this.state.allPicked? "Here are all players chosen white cards": (this.state.choicePicked? "Your white cards were:": "Choose from the following white cards:")}
+                                    {(this.state.currentPicked != -1) && (!this.state.choicePicked)  && (this.state.isCzar || !this.state.allPicked)? 
+                                        <button type="button" className="confirmChoiceButton" onClick={() => {this.pickWhiteCard(this.state.currentPicked); const copy = this.state; copy.choicePicked =  true; this.setState(copy)}}>
+                                            Confirm Choice
+                                        </button> 
+                                        : <div />}
                                 </div>
                                 {this.state.whiteCards.map((val, index) => <button className={(index === this.state.currentPicked)? "cardButtonPicked": "cardButton"} onClick={() => {const copy = this.state; copy.currentPicked = index; this.setState(copy)}} type="button">
                                                             <WhiteCard text={val.text}/>
