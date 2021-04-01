@@ -7,7 +7,7 @@ import '../styles/lobby-styles.css'
 function Lobby() {
     const games = Api.getActiveGames();
     return (
-        <div>
+        <div style={{overflowX: "hidden", backgroundColor: "black", height: "100vh"}}> 
             <div className="lobbyNavbar">
 				CARDS AGAINST AI
 			</div>

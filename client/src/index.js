@@ -6,12 +6,14 @@ import reportWebVitals from './reportWebVitals';
 import Lobby from './pages/Lobby';
 import GameScreen from './pages/GameScreen';
 import CreateGame from './pages/CreateGame'
+import WinScreen from './pages/WinScreen'
 
 ReactDOM.render(
 	<React.StrictMode>
 		<Router>
 			<Switch>
 				<Route path="/createGame/" component={CreateGame} />
+				<Route path="/games/:gameID/win" component={WinScreen} />
 				<Route path="/games/:gameID" component={GameScreen} />
 				<Route path="/lobby" component={Lobby} />
 				<Route path="/" render={() =>

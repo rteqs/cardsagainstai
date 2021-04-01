@@ -1,0 +1,29 @@
+.winScreenWrapper {
+    display: grid;
+    grid-template-columns: auto;
+    width: 100vw;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    padding: 10vh;
+}
+
+.winGameScoreboard {
+    background-color: white;
+    margin: 20px;
+    height: 250px;
+    width: 100%;
+    background-color:#fafafa;
+    border-radius: 10px;
+    border: 2px solid black;
+    padding: 10px;
+    text-align: center;
+    font-size: larger;
+    overflow-x: hidden;
+}
+
+.winTitle {
+    font-size: x-large;
+    font-weight: bold;
+    text-decoration: underline;
+}

@@ -10,6 +10,43 @@ class Api {
                 "goal": 8
             },
             {
+                "gameID": "12131321", 
+                "name": "game 1", 
+                "players": [{"name": "tom", "userId": "12131321"}, {"name": "mot", "userId": "0900"}],
+                "goal": 8
+            },
+            {
+                "gameID": "12131321", 
+                "name": "game 1", 
+                "players": [{"name": "tom", "userId": "12131321"}, {"name": "mot", "userId": "0900"}],
+                "goal": 8
+            },
+            {
+                "gameID": "12131321", 
+                "name": "game 1", 
+                "players": [{"name": "tom", "userId": "12131321"}, {"name": "mot", "userId": "0900"}],
+                "goal": 8
+            },
+            {
+                "gameID": "12131321", 
+                "name": "game 1", 
+                "players": [{"name": "tom", "userId": "12131321"}, {"name": "mot", "userId": "0900"}],
+                "goal": 8
+            },
+            {
+                "gameID": "12131321", 
+                "name": "game 1", 
+                "players": [{"name": "tom", "userId": "12131321"}, {"name": "mot", "userId": "0900"}],
+                "goal": 8
+            },
+            {
+                "gameID": "12131321", 
+                "name": "game 1", 
+                "players": [{"name": "tom", "userId": "12131321"}, {"name": "mot", "userId": "0900"}],
+                "goal": 8
+            },
+            
+            {
                 "gameID": "niceoo", 
                 "name": "game 1", 
                 "players": [{"name": "mot", "userId": "0900"}, {"name": "tom", "userId": "12131321"}, {"name": "mot", "userId": "0900"}, ],
@@ -31,8 +68,9 @@ class Api {
         return {
             blackCard: {"text": "niceoo"},
             whiteCards: [{"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"},  {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "ok buddy"}, {"text": "trash"}],
-            players: [{"name": "yousef", "userID": "yousef", "score": 2, "isCzar": true}, {"name": "mot", "userID": "mot", "score": 2, "isCzar": false}],
-            allPicked: true,
+            players: [{"name": "yousef", "userID": "yousef", "score": 1, "isCzar": false}, {"name": "mot", "userID": "mot", "score": 2, "isCzar": false}],
+            allPicked: false,
+            goal: 8,
         }
     }
 
