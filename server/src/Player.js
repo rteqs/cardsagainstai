@@ -6,7 +6,7 @@ function Player(ws) {
   this.score = 0; // number
   this.host = false; // if player is a host
   this.status = 0; // 0 card not played, 1 card played, 2 czar
-  this.ws = ws
+  this.ws = ws;
 }
 
 /**
