@@ -58,31 +58,32 @@ function updateGame(game) {
 }
 
 function getNCardsFromArray(n, array, idOnly) {
-  var requestedSet = [];
-  for (var i = 0; i < n; i++) {
-    let element = array[Math.floor(Math.random()*array.length)]
+  console.log(n + ", " + array.length + ", " + idOnly )
+  let requestedSet = [];
+  let clonedArray = [...array]; 
+  for (i = 0; i < n; i++) {
+    let index = Math.floor(Math.random()*clonedArray.length)
+    let element = clonedArray[index]
+    clonedArray.splice(index, 1)
     if (idOnly) {
       element = element.id
     }
     requestedSet.push(element);
   }
+  console.log("Requestedset: " + requestedSet)
   return requestedSet;
 }
 
 function getQuestionCards(numCards, idOnly) {
-  if (blackCards.length === 0) {
-    loadBlackCardsFromFile()
-  }
   return getNCardsFromArray(numCards, blackCards, idOnly)
 }
 
 function getAnswerCards(numCards, idOnly) {
-  if (whiteCards.length === 0) {
-    loadWhiteCardsFromFile()
-  }
   return getNCardsFromArray(numCards, whiteCards, idOnly)
 }
 
+loadBlackCardsFromFile()
+loadWhiteCardsFromFile()
 module.exports = {
   addGame,
   getGame,

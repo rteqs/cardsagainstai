@@ -6,7 +6,7 @@ function Game() {
   this.gameId = uuidv4(); // uuid
   this.state = 0; // PLAYING 1, JUDGING 2, IDLE 0
   this.czar = null; // Player object
-  this.players = []; // Player | Array
+  this.players = {}; // playerId: Player
   this.board = {
     // gathered black cards,totalRounds = 41 (for numPlayers = 10, targetPoints = 5)
     questionCards: [], // number (cardId) | Array
@@ -27,18 +27,20 @@ function Game() {
  * @params ws
  */
 Game.prototype.start = function (ws, redis) {
+  // 1. Load appropriate number of cards from DB
   const fullHandSize = 10
-  const numPlayers = this.players.length
+  const numPlayers = Object.keys(this.players).length
   const targetPoints = 5
   const totalRounds = numPlayers * (targetPoints - 1) + targetPoints
-	// 1. Load cards from DB
   this.board.questionCards = redis.getQuestionCards(totalRounds, true)
   const numWhiteCards = numPlayers * totalRounds
   this.board.answerCards = redis.getAnswerCards(numWhiteCards, true)
-  // 2. Deal cards (including black)
-  this.currentQuestionCard = this.board.questionCards.pop()
+  // 2. Deal cards to board and players
+  // console.log("BOARD: " + JSON.stringify(this.board, undefined, 2))
+  this.board.currentQuestionCard = this.board.questionCards.pop()
   this.players = this.replenishHand(this.players, fullHandSize)
-
+  // 3. Pick Czar
+  this.pickCzar()
 	// 5. wait for all player to play a card (except Czar): handleSelect
 	// 6. updateBoard // show all played white Cards
 	// 7. Turn to state to judging
@@ -54,8 +56,8 @@ Game.prototype.start = function (ws, redis) {
  */
 Game.prototype.addPlayer = function (ws) {
   const player = playerUtil.createPlayer(ws)
-  this.players.push(player)
-  return player;
+  this.players[player.playerId] = player
+  return player.playerId;
 };
 
 /**
@@ -63,30 +65,55 @@ Game.prototype.addPlayer = function (ws) {
  * @returns
  */
 Game.prototype.pickCzar = function () {
-  const czar = this.players[Math.floor(Math.random() * this.players.length)];
-  this.czar = czar;
+  let nextRandomCzarId = -1;
+  let listOfIds = Array.from(Object.keys(this.players));
+  while (nextRandomCzarId === -1 || (this.czar != null && nextRandomCzarId === this.czar.playerId)) {
+    nextRandomCzarId = listOfIds[Math.floor(Math.random() * listOfIds.length)]
+  }
+  for (playerId of Object.keys(this.players)) {
+    let player = this.players[playerId]
+    if (playerId === nextRandomCzarId) {
+      player.status = 2
+      this.czar = player
+    } else {
+      player.status = 0
+    }
+  }
 };
 
 
 /**
  * Deals cards to players until they have fullHandSize cards
  * @param fullHandSize Number of cards to replenish to
- * @returns List of players
+ * @returns map of players
  */
 Game.prototype.replenishHand = function (players, fullHandSize) {
-  players.forEach(player => {
+  for (let playerId of Object.keys(players)) {
+    let player = this.players[playerId]
     while (player.hand.length < fullHandSize) {
       player.hand.push(this.board.answerCards.pop())
     }
-  });
+  }
   return players
 }
 
 /**
  * Handles player card selction
- * @returns boolean
  */
-Game.prototype.handleSelect= function (players) {}
+Game.prototype.handleSelect = function (playerId, cardId) {
+  player = this.players[playerId]
+  if (player.status === 0) { // Card not selected
+    this.board.currentAnswerCardsMap[playerId] = cardId
+    const cardIndex = player.hand.indexOf(cardId)
+    player.hand.splice(cardIndex, 1)
+    console.log("Selected card " + cardId + " with index " + cardIndex)
+    player.status = 1
+    this.players[playerId] = player
+  } else {
+    // Already submitted or czar
+    // TODO: How to send errors?
+  }
+}
 
 /**
  * Handles czar card selection && increment player score
