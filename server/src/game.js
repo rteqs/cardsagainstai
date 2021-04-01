@@ -32,9 +32,9 @@ Game.prototype.start = function (ws, redis) {
   const targetPoints = 5
   const totalRounds = numPlayers * (targetPoints - 1) + targetPoints
 	// 1. Load cards from DB
-  this.board.questionCards = redis.getQuestionCards(totalRounds)
+  this.board.questionCards = redis.getQuestionCards(totalRounds, true)
   const numWhiteCards = numPlayers * totalRounds
-  this.board.answerCards = redis.getAnswerCards(numWhiteCards)
+  this.board.answerCards = redis.getAnswerCards(numWhiteCards, true)
   // 2. Deal cards (including black)
   this.currentQuestionCard = this.board.questionCards.pop()
   this.players = this.replenishHand(this.players, fullHandSize)

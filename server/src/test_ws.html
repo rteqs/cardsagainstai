@@ -8,6 +8,7 @@
 <button id='pickCzar'>Pick Czar</button>
 <button id='startGame'>Start Game</button>
 <button id='getGameObj'>Get Game Obj</button>
+<button id='selectCard'>Select Random Card for player</button>
 
 <div>
     <pre id='response' style='float: left; width: 50%'></pre>
@@ -35,14 +36,10 @@
             game.players.forEach(player => {
                 console.log("Player hand: " + player.hand)
                 gameRep.push('\tPlayerId: ' + player.playerId)
-                gameRep.push('\t\tCards: ' + player.hand.map(cardSum).join(", "))
+                gameRep.push('\t\tCards: ' + player.hand.join(", "))
             });
-            function cardSum(card) {
-                //return "\t- " + card.text 
-                return card.id
-            }
-            gameRep.push('Question Cards: \n\t' + game.board.questionCards.map(cardSum).join(", "))
-            gameRep.push('Answer Cards: \n\t' + game.board.answerCards.map(cardSum).join(", "))
+            gameRep.push('Question Cards: \n\t' + game.board.questionCards.join(", "))
+            gameRep.push('Answer Cards: \n\t' + game.board.answerCards.join(", "))
             document.querySelector('#gameDisplay').textContent = gameRep.join('\n')
         }
 
@@ -71,6 +68,7 @@
         document.querySelector('#pickCzar').onclick = function() { sendRequest('pickCzar') }
         document.querySelector('#startGame').onclick = function() { sendRequest('startGame') }
         document.querySelector('#getGameObj').onclick = function() { sendRequest('getGameObj') }
+        document.querySelector('#selectCard').onclick = function() { sendRequest('selectCard') }
 
         function sendRequest(requestType) {
             if (!ws) {
@@ -96,6 +94,12 @@
                     data = {'requestType': requestType, 'gameId': gameId}
                     ws.send(JSON.stringify(data));
                     logEvent(`Sent ${requestType} request to gameId:${gameId}`)
+                    break;
+                case 'selectCard':
+                    selectedCardId = //TODO;
+                    data = {'requestType': requestType, 'gameId': gameId, 'playerId': playerId, "cardId": selectedCardId}
+                    ws.send(JSON.stringify(data))
+                    logEvent(`Sent ${requestType} request to gameId:${gameId} usign playerId: ${playerId} cardId: ${selectedCardId}`)
                     break;
                 default:
                     logEvent(`Not sure what to do with ${requestType}`)

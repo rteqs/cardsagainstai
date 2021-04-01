@@ -57,26 +57,30 @@ function updateGame(game) {
   addGame(game) // For now this just overrides the game
 }
 
-function getNCardsFromArray(n, array) {
+function getNCardsFromArray(n, array, idOnly) {
   var requestedSet = [];
   for (var i = 0; i < n; i++) {
-    requestedSet.push(array[Math.floor(Math.random()*array.length)]);
+    let element = array[Math.floor(Math.random()*array.length)]
+    if (idOnly) {
+      element = element.id
+    }
+    requestedSet.push(element);
   }
   return requestedSet;
 }
 
-function getQuestionCards(numCards) {
+function getQuestionCards(numCards, idOnly) {
   if (blackCards.length === 0) {
     loadBlackCardsFromFile()
   }
-  return getNCardsFromArray(numCards, blackCards)
+  return getNCardsFromArray(numCards, blackCards, idOnly)
 }
 
-function getAnswerCards(numCards) {
+function getAnswerCards(numCards, idOnly) {
   if (whiteCards.length === 0) {
     loadWhiteCardsFromFile()
   }
-  return getNCardsFromArray(numCards, whiteCards)
+  return getNCardsFromArray(numCards, whiteCards, idOnly)
 }
 
 module.exports = {

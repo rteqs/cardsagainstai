@@ -61,7 +61,7 @@ wss.on('connection', (ws) => {
         // console.log("Current game: " + JSON.stringify(currentGame, undefined, 2))
         ws.send(JSON.stringify({'event': "gameStarted", "data": {"game": currentGame}}))
         break;
-      case 'pickCzar':
+      case 'pickCzar': // TODO: remove because this is game logic add as part of startGame
         currentGame = redisUtil.getGame(response.gameId)
         currentGame.pickCzar()
         // Loop through each player and send an appropriate event to each saying whether they were chosen to be czar or not
@@ -74,13 +74,24 @@ wss.on('connection', (ws) => {
         });
         redisUtil.updateGame(currentGame)
         break;
-      case 'getGameObj':
+      case 'getGameObj': // TODO: Remove only testing
         ws.send(JSON.stringify({'event': 'retrievedGameObj', 'data': {'game': redisUtil.getGame(response.gameId)}}))
         break;
-      case 'join':
-        // game.handleJoin(ws)
+      case 'selectCard':
+        currentGame = redisUtil.getGame(response.gameId)
+        player = currentGame.players[response.playerId]
+        if (player.status === 0) { // Card not selected
+          currentGame.board.currentAnswerCardsMap[player.playerId] = response.cardId
+          player.hand.splice(player.hand.indexOf(cardId), 1)
+          currentGame.players[response.playerId] = player
+          redisUtil.updateGame(currentGame)
+          ws.send(JSON.stringify({'event': 'cardSelected', 'data': {'game': currentGame}));
+        } else {
+          // Already submitted or czar
+          // TODO: How to send errors?
+        }
         break;
-
+      // TODO: add getGameList for displaying in lobby
       case 'leave':
         break;
 
