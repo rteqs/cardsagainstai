@@ -12,7 +12,9 @@
 <div>
     <textarea id='response' style='float: left; width: 50%; height:80%' cols="10" wrap="soft"> </textarea>
     <!-- <pre id='response' style='float: left; width: 50%; word-wrap: break-word;word-break: break-all;'></pre> -->
-    <pre id='gameDisplay' style='float: right; width: 50%'></pre>    
+    <textarea id='gameDisplay' style='float: right; width: 50%; height:80%' cols="10" wrap="soft"> </textarea>
+
+    <!-- <pre id='gameDisplay' style='float: right; width: 50%'></pre>     -->
 </div>
 <!-- <input type='text' id='messageBox' placeholder='Type message here'></input> -->
 
@@ -117,7 +119,7 @@
         function handleResponse(data) {
             const response = JSON.parse(data)
             console.log('response.event = ' + response.event)
-            // console.log('response: ' + JSON.stringify(response, undefined, 2))
+            // console.log('response: ' + JSON.stringify(response.event, undefined, 2))
             switch (response.event) {
                 case 'connected':
                     logEvent('We are connected to the server!')
@@ -149,6 +151,10 @@
                 case 'cardSelected':
                     currentGame = response.data.game
                     logEvent(`Selected card successfully in game ${currentGame.gameId}`)
+                    break;
+                case 'gameUpdated':
+                    currentGame = response.data.game
+                    logEvent(`Recived broadcast about game update`)
                     break;
                 default:
                     logEvent(`Recieved: ${JSON.stringify(response, undefined, 2)}`);

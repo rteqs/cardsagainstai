@@ -41,7 +41,9 @@ Game.prototype.start = function (ws, redis) {
   this.players = this.replenishHand(this.players, fullHandSize)
   // 3. Pick Czar
   this.pickCzar()
-	// 5. wait for all player to play a card (except Czar): handleSelect
+  // TODO: Turn state to collecting answers
+
+  // 5. wait for all player to play a card (except Czar): handleSelect
 	// 6. updateBoard // show all played white Cards
 	// 7. Turn to state to judging
 	// 8. Wait for Czar: handlePickWinningCard
@@ -119,7 +121,10 @@ Game.prototype.handleSelect = function (playerId, cardId) {
  * Handles czar card selection && increment player score
  * @returns boolean 
  */
-Game.prototype.handlePickWinningCard = function (players) {}
+Game.prototype.handlePickWinningCard = function () {
+  // If not all players have selected, then error?
+  
+}
 
 /**
  * Add new player and update other players

@@ -20,6 +20,22 @@ function connectClient(ws) {
   ws.send(JSON.stringify(payload));
 }
 
+function broadCastGameUpdated(gameId) {
+  let currentGame = redisUtil.getGame(gameId)
+  let data = {'event': 'gameUpdated', 'data': {'game': currentGame}}
+  // let wsList = []
+  for (playerId of Object.keys(currentGame.players)) {
+    let player = currentGame.players[playerId]
+    console.log("Sending game updated to player " + player.playerId)
+    try {
+      player.ws.send(JSON.stringify(data))      
+    } catch (error) {
+      console.log("Error: " + error)
+      // error should handle when there is circular data structure, don't need to update the current player anyways
+    }
+  }
+}
+
 wss.on('connection', (ws) => {
   ws.isAlive = true;
   console.log('client connected');
@@ -39,6 +55,7 @@ wss.on('connection', (ws) => {
     switch (response.requestType) {
       case 'createGame':
         currentGame = game.initializeGame()
+        playerId = currentGame.addPlayer(ws)
         redisUtil.addGame(currentGame)
         ws.send(JSON.stringify({"event": "gameCreated", "data": {"game": currentGame}}))
         break;
@@ -47,12 +64,6 @@ wss.on('connection', (ws) => {
         playerId = currentGame.addPlayer(ws)
         redisUtil.updateGame(currentGame)
         ws.send(JSON.stringify({'event': "joinedGame", "data": {"game": currentGame, "playerId": playerId}}))
-        break;
-      case 'addNewPlayer':
-        currentGame = redisUtil.getGame(response.gameId)
-        playerId = currentGame.addPlayer(ws)
-        redisUtil.updateGame(currentGame)
-        ws.send(JSON.stringify({'event': "newPlayerAdded", "data": {"game": currentGame, "playerId": playerId}}))
         break;
       case 'startGame':
         currentGame = redisUtil.getGame(response.gameId)
@@ -79,6 +90,9 @@ wss.on('connection', (ws) => {
       default:
         console.log('Invalid method', response.method);
     }
+    if (currentGame !== null) {
+      broadCastGameUpdated(currentGame.gameId, )
+    }  
   });
 });
 
