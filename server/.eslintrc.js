@@ -8,6 +8,14 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 12,
   },
-  rules: { 'prettier/prettier': 'error' },
+  rules: {
+    'prettier/prettier': 'error',
+    'no-console': 'off',
+    'no-param-reassign': [
+      'error',
+      { props: true, ignorePropertyModificationsFor: ['ws'] },
+    ],
+    'consistent-return': 'off',
+  },
   plugins: ['prettier'],
 };

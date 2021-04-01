@@ -36,14 +36,18 @@
   },
   "homepage": "https://github.com/NauqGnesh/cardsagainstai#readme",
   "dependencies": {
+    "commitizen": "^4.2.3",
     "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "redis": "^3.0.2",
+    "uuid": "^8.3.2",
+    "ws": "^7.4.4"
   },
   "devDependencies": {
-    "commitizen": "^4.2.3",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^7.21.0",
     "eslint-config-airbnb": "^18.2.1",
@@ -61,7 +65,7 @@
   },
   "config": {
     "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
+      "path": "./server/node_modules/cz-conventional-changelog"
     }
   }
 }
