@@ -179,12 +179,13 @@ Game.prototype.handleJoin = function (ws, host) {
       status: '200',
       player,
       game: {
-        board: this.board,
+        gameId: this.gameId,
         name: this.name,
         goal: this.goal,
+        czar: this.czar,
         maxPlayers: this.maxPlayers,
         state: this.state,
-        czar: this.czar,
+        board: this.board,
       },
     })
   );
@@ -318,8 +319,8 @@ function getHighestScore(players) {
  * Factory method for Game
  * @returns Game object
  */
-function initializeGame() {
-  const game = new Game();
+function initializeGame(goal, name, maxPlayers) {
+  const game = new Game(goal, name, maxPlayers);
   return game;
 }
 

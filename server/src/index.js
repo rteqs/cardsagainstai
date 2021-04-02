@@ -57,7 +57,10 @@ wss.on('connection', (ws) => {
     switch (response.requestType) {
       case 'createGame':
         // validation
-        currentGame = game.initializeGame();
+        currentGame = game.initializeGame(
+          response.info.goal,
+          response.info.name
+        );
         currentGame.handleJoin(ws, true);
         redisUtil.addGame(currentGame);
         break;
@@ -131,14 +134,16 @@ wss.on('connection', (ws) => {
         break;
 
       case 'getGameList':
-        console.log(redisUtil.getAllGames());
-        gameList = Object.values(redisUtil.getAllGames()).map(([gid, obj]) => ({
-          gid,
-          name: obj.name,
-          goal: obj.goal,
-          maxPlayers: obj.maxPlayers,
-          numberOfPlayer: obj.players.size,
-        }));
+        console.log('games in redis', redisUtil.getAllGames());
+        gameList = Object.entries(redisUtil.getAllGames()).map(
+          ([gid, obj]) => ({
+            gameId: gid,
+            name: obj.name,
+            goal: obj.goal,
+            maxPlayers: obj.maxPlayers,
+            numberOfPlayer: obj.players.size,
+          })
+        );
         ws.send(
           JSON.stringify({
             event: 'getGameList',

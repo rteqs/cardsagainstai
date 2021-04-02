@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import Api from '../Api';
 import '../styles/lobby-styles.css';
@@ -7,7 +8,15 @@ import history from '../history';
 // TODO: MAKE GAME CARDS DYNAMIC
 
 function Lobby({ ws }) {
-  const games = Api.getActiveGames(ws);
+  const location = useLocation();
+  // BREAKING CHANGE
+  const [games, setGames] = useState([]);
+
+  useEffect(() => {
+    console.log(games);
+    setGames(location.state.games);
+  }, [location]);
+
   const handleJoin = (gameID) => {
     Api.joinGame(ws, gameID);
     history.push(`/games/${gameID}`);

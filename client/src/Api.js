@@ -14,82 +14,82 @@ function getActiveGames(ws) {
   const response = ws.send(JSON.stringify(req));
   console.log(response);
 
-  return [
-    {
-      gameId: '12131321',
-      name: 'game 1',
-      players: [
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-    {
-      gameId: '12131321',
-      name: 'game 1',
-      players: [
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-    {
-      gameId: '12131321',
-      name: 'game 1',
-      players: [
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-    {
-      gameId: '12131321',
-      name: 'game 1',
-      players: [
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-    {
-      gameId: '12131321',
-      name: 'game 1',
-      players: [
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-    {
-      gameId: '12131321',
-      name: 'game 1',
-      players: [
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-    {
-      gameId: '12131321',
-      name: 'game 1',
-      players: [
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-
-    {
-      gameId: 'niceoo',
-      name: 'game 1',
-      players: [
-        { name: 'mot', userId: '0900' },
-        { name: 'tom', userId: '12131321' },
-        { name: 'mot', userId: '0900' },
-      ],
-      goal: 8,
-    },
-  ];
+  // return [
+  //   {
+  //     gameId: '12131321',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  //   {
+  //     gameId: '12131321',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  //   {
+  //     gameId: '12131321',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  //   {
+  //     gameId: '12131321',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  //   {
+  //     gameId: '12131321',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  //   {
+  //     gameId: '12131321',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  //   {
+  //     gameId: '12131321',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  //
+  //   {
+  //     gameId: 'niceoo',
+  //     name: 'game 1',
+  //     players: [
+  //       { name: 'mot', userId: '0900' },
+  //       { name: 'tom', userId: '12131321' },
+  //       { name: 'mot', userId: '0900' },
+  //     ],
+  //     goal: 8,
+  //   },
+  // ];
 }
 
 function joinGame(ws, gameId) {
@@ -168,20 +168,27 @@ function waitForOpenConnection(socket) {
   });
 }
 
-function handleGameCreated(gameId) {
-  history.push(`/games/${gameId}`);
-}
+// function handleJoin(gameId) {
+//   history.push(`/games/${gameId}`);
+// }
 
 function handleServerMessages(event) {
-  console.log(event);
   const data = JSON.parse(event.data);
   console.log(data);
   switch (data.event) {
-    case 'gameCreated': {
-      console.log(data.data.game.gameId);
-      handleGameCreated(data.data.game.gameId);
+    case 'joinGame': {
+      console.log('Joining game');
+      const { gameId } = data.game;
+      history.push(`/games/${gameId}`);
       break;
     }
+
+    case 'getGameList': {
+      console.log('Receiving games');
+      history.push({ pathname: '/lobby', state: { games: data.gameList } });
+      break;
+    }
+
     default: {
       console.log('do nothing');
       break;

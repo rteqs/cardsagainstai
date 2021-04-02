@@ -5,14 +5,16 @@ import GameScreen from '../pages/GameScreen';
 import CreateGame from '../pages/CreateGame';
 import WinScreen from '../pages/WinScreen';
 import Api from '../Api';
-import history from '../history';
+// import history from '../history';
 
 export default function App() {
   const ws = useRef(null);
 
   const handleEnterLobby = async () => {
     ws.current = await Api.connectToServer();
-    history.push('/lobby');
+    Api.getActiveGames(ws.current);
+    console.log('Awaiting server response');
+    // history.push('/lobby');
   };
 
   return (
