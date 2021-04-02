@@ -4,9 +4,7 @@ const cors = require('cors');
 require('express-async-errors');
 
 const app = express();
-const config = require('./utils/config');
 const middleware = require('./utils/middleware');
-const logger = require('./utils/logger');
 const apiRouter = require('./controllers/api');
 
 app.use(cors());

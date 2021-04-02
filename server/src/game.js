@@ -9,7 +9,7 @@ function Game(goal, name, maxPlayers) {
   this.maxPlayers = maxPlayers;
   this.state = 0; // PLAYING 1, JUDGING 2, IDLE 0
   this.czar = null; // Player object
-  this.players = new Map(); // playerId: Player ! Need order of insertion
+  this.players = new Map(); // playerId: Player Need order of insertion
   // gathered black cards,totalRounds = 41 (for numPlayers = 10, targetPoints = 5)
   this.questionCards = []; // number (cardId) | Array
   // gathered white cards, num_players * totalRounds = 469 total
@@ -21,45 +21,9 @@ function Game(goal, name, maxPlayers) {
     turnNum: 0,
   };
   this.timestamp = new Date();
-}
-
-function omit(obj, ...props) {
-  const result = { ...obj };
-  props.forEach((prop) => {
-    delete result[prop];
-  });
-  return result;
-}
-
-/**
- * Game loop
- * TODO can't use loops!
- */
-Game.prototype.start = function (redis) {
-  if (this.players.size <= 2) {
-    throw new Error("Not enough players. Can't start game");
-  }
-
-  if (this.state !== 0) {
-    throw new Error('Game in progress.');
-  }
   // 1. Load appropriate number of cards from DB
-  const fullHandSize = 10;
-  const numPlayers = Object.keys(this.players).length;
-  const targetPoints = 5;
-  const totalRounds = numPlayers * (targetPoints - 1) + targetPoints;
-  const numWhiteCards = numPlayers * totalRounds;
-  this.board.questionCards = redis.getQuestionCards(totalRounds, true);
-  this.board.answerCards = redis.getAnswerCards(numWhiteCards, true);
-
   // 2. Deal cards to board and players
-  // console.log("BOARD: " + JSON.stringify(this.board, undefined, 2))
-  this.board.currentQuestionCard = this.board.questionCards.pop();
-  this.players = this.replenishHand(this.players, fullHandSize);
   // 3. Pick Czar
-  this.pickCzar();
-  // TODO: Turn state to collecting answers
-
   // 5. wait for all player to play a card (except Czar): handleSelect
   // 6. updateBoard // show all played white Cards
   // 7. Turn to state to judging
@@ -67,58 +31,202 @@ Game.prototype.start = function (redis) {
   // 9. Clean Board // removes all black and  white cards
   // 10. updatePlayerList
   // 11. loop Back
-};
+}
 
 /**
- * Picks a czar for the current round
- * @returns
+ * Factory method for Game
+ * @returns Game object
  */
-Game.prototype.pickCzar = function () {
-  const index = this.turnNum % this.players.size;
-  const player = Array.from(this.players.values())[index];
-  player.status = 2;
-  this.czar = player.id;
-};
+function initializeGame(goal, name, maxPlayers) {
+  const game = new Game(goal, name, maxPlayers);
+  return game;
+}
 
 /**
- * Deals cards to players until they have fullHandSize cards
- * @param fullHandSize Number of cards to replenish to
- * @returns map of players
+ * Start an idle game
  */
-Game.prototype.replenishHand = function (fullHandSize) {
-  Array.from(this.players.values()).forEach((player) => {
-    while (player.hand.length < fullHandSize) {
-      player.hand.push(this.answerCards.pop());
-    }
-  });
-};
+Game.prototype.handleStart = function (playerId, redis) {
+  if (!this.player.get(playerId).host) {
+    throw new Error("Not host. Can't start game");
+  }
 
-/**
- * Adds player to the game room
- */
-Game.prototype.addPlayer = function () {
-  const player = createPlayer();
-  this.players.set(player.playerId, player);
-  return player;
-};
+  if (this.players.size <= 2) {
+    throw new Error("Not enough players. Can't start game");
+  }
 
-/**
- * Removes currentQuestionCard & currentAnswerCards
- */
-Game.prototype.cleanBoard = function () {
-  Array.from(this.players.values()).forEach((player) => {
-    player.status = 0;
-  });
-  this.czar = null;
-  this.baord.turnNum += 1;
-  this.board.currentQuestionCards = [];
-  this.board.currentAnswerCards = [];
-  this.board.currentAnswerCardsMap = {};
+  if (this.state !== 0) {
+    throw new Error('Game in progress.');
+  }
+
+  const fullHandSize = 10;
+  const numPlayers = Object.keys(this.players).length;
+  const targetPoints = 5;
+  const totalRounds = numPlayers * (targetPoints - 1) + targetPoints;
+  const numWhiteCards = numPlayers * totalRounds;
+  this.questionCards = redis.getQuestionCards(totalRounds, true);
+  this.answerCards = redis.getAnswerCards(numWhiteCards, true);
+  shuffle(this.questionCards);
+  shuffle(this.answerCards);
+
+  // console.log("BOARD: " + JSON.stringify(this.board, undefined, 2))
+  this.board.currentQuestionCard = this.questionCards.pop();
+  this.players = this.replenishHand(this.players, fullHandSize);
+  this.pickCzar();
   this.state = 1;
+  Array.from(this.players.values()).forEach((p) => {
+    this.updatePlayer(p.ws, p.playerId);
+  });
+  this.updateBoard();
+  this.updatePlayerList();
 };
 
 /**
- * Sends the current state board to the player
+ * Add new player and update other players
+ * @returns boolean
+ */
+Game.prototype.handleJoin = function (ws, host) {
+  let player = createPlayer(ws);
+  player = omit(player, 'ws');
+
+  player.host = host;
+  ws.send(
+    JSON.stringify({
+      event: 'joinGame',
+      status: '200',
+      player,
+      game: {
+        gameId: this.gameId,
+        name: this.name,
+        goal: this.goal,
+        czar: this.czar,
+        maxPlayers: this.maxPlayers,
+        state: this.state,
+        board: this.board,
+      },
+    })
+  );
+  this.updatePlayerList();
+};
+
+/**
+ * Removes player and update other players
+ * @returns boolean
+ */
+Game.prototype.handleLeave = function (ws, playerId) {
+  const player = this.players.get(playerId);
+  if (!player) {
+    throw new Error('not in game');
+  }
+  const { status } = player;
+  this.players.delete(playerId);
+  this.updatePlayerList();
+  ws.send(
+    JSON.stringify({
+      event: 'leave',
+      status: '200',
+    })
+  );
+
+  if (status === 1) {
+    const [cid, pid] = Object.entries(this.currentAnswerCardsMap).find((arr) =>
+      arr.includes(playerId)
+    );
+    this.currentAnswerCardsMap.delete(cid);
+    this.updateBoard();
+  } else if (status === 2) {
+    console.log('Czar leaving');
+    ws.send({
+      event: 'broadcast message',
+      message: 'Czar left the game. Refunding cards.',
+    });
+    this.cleanBoard();
+    this.updateBoard();
+  }
+};
+
+/**
+ * Handles player card selction
+ */
+Game.prototype.handleSelect = function (playerId, cardId) {
+  const player = this.players.get(playerId);
+  if (player.status === 0 && player.hand.includes(cardId)) {
+    // Card not selected
+    this.board.currentAnswerCardsMap[cardId] = playerId;
+    const cardIndex = player.hand.indexOf(cardId);
+    player.hand.splice(cardIndex, 1);
+    console.log(`Selected card ${cardId} with index ${cardIndex}`);
+    player.status = 1;
+    // Begin judgin phase if all players have played a card
+    if (this.checkAllPlayers()) {
+      this.state = 2;
+      this.updateBoard();
+    }
+  } else {
+    // Already submitted or czar
+    throw new Error('Invalid Operation');
+  }
+};
+
+/**
+ * Handles czar card selection && increment player score
+ * @returns boolean
+ */
+Game.prototype.handlePickWinningCard = function (playerId, cardId) {
+  const player = this.players.get(playerId);
+  if (
+    this.state === 2 &&
+    player.status === 2 &&
+    this.currentAnswerCards.includes(cardId)
+  ) {
+    const winner = this.currentAnswerCardsMap[cardId];
+    winner.score += 1;
+    const event = winner.score === this.goal ? 'gameOver' : 'win';
+    const data = {
+      event,
+      player: winner.id,
+      card: cardId,
+    };
+
+    Array.from(this.players.values()).forEach((p) => {
+      p.ws.send(JSON.stringify(data));
+    });
+
+    const twentySeconds = 20 * 1000;
+    if (event === 'win') {
+      this.handleNextTurn();
+    } else {
+      this.handleGameOver();
+    }
+    setTimeout(() => {
+      Array.from(this.players.values()).forEach((p) => {
+        this.updatePlayer(p.ws, p.playerId);
+      });
+      this.updateBoard();
+    }, twentySeconds);
+  } else {
+    // Not czar or card is not in play
+    throw new Error('Invalid Operation');
+  }
+};
+
+Game.prototype.handleNextTurn = function () {
+  this.cleanBoard();
+  this.replenishHand();
+  this.pickCzar();
+  this.board.currentQuestionCard = this.questionCards.pop();
+  this.updatePlayerList();
+};
+
+Game.prototype.handleGameOver = function () {
+  this.state = 0;
+  this.cleanBoard();
+  this.board.turnNum = 0;
+  this.questionCards = [];
+  this.answerCards = [];
+};
+
+/**
+ * Sends the current state board to all players
  */
 Game.prototype.updateBoard = function () {
   const data = {
@@ -165,31 +273,36 @@ Game.prototype.updatePlayerList = function () {
 };
 
 /**
- * Add new player and update other players
- * @returns boolean
+ * Picks a czar for the current round
+ * @returns
  */
-Game.prototype.handleJoin = function (ws, host) {
-  let player = createPlayer(ws);
-  player = omit(player, 'ws');
+Game.prototype.pickCzar = function () {
+  const index = this.turnNum % this.players.size;
+  const player = Array.from(this.players.values())[index];
+  player.status = 2;
+  this.czar = player.id;
+};
 
-  player.host = host;
-  ws.send(
-    JSON.stringify({
-      event: 'joinGame',
-      status: '200',
-      player,
-      game: {
-        gameId: this.gameId,
-        name: this.name,
-        goal: this.goal,
-        czar: this.czar,
-        maxPlayers: this.maxPlayers,
-        state: this.state,
-        board: this.board,
-      },
-    })
-  );
-  this.updatePlayerList();
+/**
+ * Deals cards to players until they have fullHandSize cards
+ * @param fullHandSize Number of cards to replenish to
+ * @returns map of players
+ */
+Game.prototype.replenishHand = function (fullHandSize) {
+  Array.from(this.players.values()).forEach((player) => {
+    while (player.hand.length < fullHandSize) {
+      player.hand.push(this.answerCards.pop());
+    }
+  });
+};
+
+/**
+ * Adds player to the game room
+ */
+Game.prototype.addPlayer = function () {
+  const player = createPlayer();
+  this.players.set(player.playerId, player);
+  return player;
 };
 
 /**
@@ -205,6 +318,9 @@ Game.prototype.checkAllPlayers = function () {
   return true;
 };
 
+/**
+ * Give back the cards that players have played during the turn
+ */
 Game.prototype.refundCards = function () {
   const { players } = this;
   Object.entries(this.currentAnswerCardsMap).forEach((cardId, playerId) => {
@@ -213,75 +329,20 @@ Game.prototype.refundCards = function () {
 };
 
 /**
- * Removes player and update other players
- * @returns boolean
+ * Removes currentQuestionCard & currentAnswerCards
  */
-Game.prototype.handleLeave = function (ws, playerId) {
-  const player = this.players.get(playerId);
-  if (!player) {
-    throw new Error('not in game');
-  }
-  const { status } = player;
-  this.players.delete(playerId);
-  this.updatePlayerList();
-  ws.send(
-    JSON.stringify({
-      event: 'leave',
-      status: '200',
-    })
-  );
-
-  if (status === 1) {
-    const [cid, pid] = Object.entries(this.currentAnswerCardsMap).find((arr) =>
-      arr.includes(playerId)
-    );
-    this.currentAnswerCardsMap.delete(cid);
-    this.updateBoard();
-  } else if (status === 2) {
-    console.log('Czar leaving');
-    ws.send({
-      event: 'broadcast message',
-      message: 'Czar left the game. Refunding cards.',
-    });
-    this.cleanBoard();
-    this.updateBoard();
-    // TODO Restart new turn
-    this.start();
-  }
+Game.prototype.cleanBoard = function () {
+  Array.from(this.players.values()).forEach((player) => {
+    player.status = 0;
+  });
+  this.czar = null;
+  this.baord.turnNum += 1;
+  this.board.currentQuestionCards = [];
+  this.board.currentAnswerCards = [];
+  this.board.currentAnswerCardsMap = {};
+  this.state = 1;
 };
 
-/**
- * Handles player card selction
- */
-Game.prototype.handleSelect = function (playerId, cardId) {
-  const player = this.players.get(playerId);
-  if (player.status === 0 && player.hand.includes(cardId)) {
-    // Card not selected
-    this.board.currentAnswerCardsMap[cardId] = playerId;
-    const cardIndex = player.hand.indexOf(cardId);
-    player.hand.splice(cardIndex, 1);
-    console.log(`Selected card ${cardId} with index ${cardIndex}`);
-    player.status = 1;
-  } else {
-    // Already submitted or czar
-    throw new Error('Invalid Operation');
-  }
-};
-
-/**
- * Handles czar card selection && increment player score
- * @returns boolean
- */
-Game.prototype.handlePickWinningCard = function (playerId, cardId) {
-  const player = this.players.get(playerId);
-  if (player.status === 2 && this.currentAnswerCards.includes(cardId)) {
-    const winner = this.currentAnswerCardsMap[cardId];
-    winner.score += 1;
-  } else {
-    // Not czar or card is not in play
-    throw new Error('Invalid Operation');
-  }
-};
 /**
  * shuffles the deck of cards
  */
@@ -305,23 +366,12 @@ function shuffle(array) {
   return array;
 }
 
-function getHighestScore(players) {
-  let score = -1;
-  for (const player in players) {
-    if (player.score > score) {
-      score = player.score;
-    }
-  }
-  return score;
-}
-
-/**
- * Factory method for Game
- * @returns Game object
- */
-function initializeGame(goal, name, maxPlayers) {
-  const game = new Game(goal, name, maxPlayers);
-  return game;
+function omit(obj, ...props) {
+  const result = { ...obj };
+  props.forEach((prop) => {
+    delete result[prop];
+  });
+  return result;
 }
 
 module.exports = {

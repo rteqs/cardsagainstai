@@ -1,6 +1,5 @@
 const http = require('http');
 const WebSocket = require('ws');
-const { v4: uuidv4 } = require('uuid');
 const app = require('./app');
 const config = require('./utils/config');
 const logger = require('./utils/logger');
@@ -13,28 +12,10 @@ const wss = new WebSocket.Server({ server });
 // const gameObjects = {} (redis)
 
 function connectClient(ws) {
-  const id = uuidv4();
   const payload = {
     event: 'connected',
-    id,
   };
   ws.send(JSON.stringify(payload));
-}
-
-function broadCastGameUpdated(gameId) {
-  const currentGame = redisUtil.getGame(gameId);
-  const data = { event: 'gameUpdated', data: { game: currentGame } };
-  // let wsList = []
-  for (playerId of Object.keys(currentGame.players)) {
-    const player = currentGame.players[playerId];
-    console.log(`Sending game updated to player ${player.playerId}`);
-    try {
-      player.ws.send(JSON.stringify(data));
-    } catch (error) {
-      console.log(`Error: ${error}`);
-      // error should handle when there is circular data structure, don't need to update the current player anyways
-    }
-  }
 }
 
 wss.on('connection', (ws) => {
@@ -75,13 +56,11 @@ wss.on('connection', (ws) => {
       case 'startGame':
         try {
           currentGame = redisUtil.getGame(response.gameId);
-          currentGame.start(redisUtil);
-          // console.log("Current game: " + JSON.stringify(currentGame, undefined, 2))
+          currentGame.handleStart(redisUtil);
           ws.send(
             JSON.stringify({
               event: 'gameStarted',
               status: '200',
-              message: '',
             })
           );
           redisUtil.updateGame(currentGame);
@@ -156,9 +135,6 @@ wss.on('connection', (ws) => {
       default:
         console.log('Invalid method', response.requestType);
     }
-    // if (currentGame !== null) {
-    //   broadCastGameUpdated(currentGame.gameId);
-    // }
   });
 });
 
