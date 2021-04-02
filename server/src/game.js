@@ -58,6 +58,8 @@ Game.prototype.start = function (redis) {
   this.players = this.replenishHand(this.players, fullHandSize);
   // 3. Pick Czar
   this.pickCzar();
+  // TODO: Turn state to collecting answers
+
   // 5. wait for all player to play a card (except Czar): handleSelect
   // 6. updateBoard // show all played white Cards
   // 7. Turn to state to judging
@@ -118,7 +120,7 @@ Game.prototype.cleanBoard = function () {
 /**
  * Sends the current state board to the player
  */
-Game.prototype.updateBoard = function (message) {
+Game.prototype.updateBoard = function () {
   const data = {
     event: 'updateBoard',
     board: this.board,
@@ -144,7 +146,7 @@ Game.prototype.updatePlayer = function (ws, id) {
     czar: this.czar,
     player,
   };
-  ws.send();
+  ws.send(JSON.stringify(data));
 };
 
 /**
@@ -158,7 +160,9 @@ Game.prototype.updatePlayerList = function () {
     event: 'updatePlayerList',
     playerList,
   };
-  ws.send(JSON.stringify(data));
+  this.players
+    .values()
+    .forEach((player) => player.ws.send(JSON.stringify(data)));
 };
 
 /**
@@ -186,6 +190,19 @@ Game.prototype.handleJoin = function (ws, host) {
     })
   );
   this.updatePlayerList();
+};
+
+/**
+ * Check if all players (except czar) have played a card
+ * 	@returns boolean
+ */
+Game.prototype.checkAllPlayers = function () {
+  for (const player in this.players) {
+    if (player.status === 0) {
+      return false;
+    }
+  }
+  return true;
 };
 
 Game.prototype.refundCards = function () {
@@ -297,19 +314,6 @@ function getHighestScore(players) {
   }
   return score;
 }
-
-/**
- * Check if all players (except czar) have played a card
- * 	@returns boolean
- */
-Game.prototype.checkAllPlayers = function () {
-  for (const player in this.players) {
-    if (player.status === 0) {
-      return false;
-    }
-  }
-  return true;
-};
 
 /**
  * Factory method for Game

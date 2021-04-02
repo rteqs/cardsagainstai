@@ -21,6 +21,22 @@ function connectClient(ws) {
   ws.send(JSON.stringify(payload));
 }
 
+function broadCastGameUpdated(gameId) {
+  const currentGame = redisUtil.getGame(gameId);
+  const data = { event: 'gameUpdated', data: { game: currentGame } };
+  // let wsList = []
+  for (playerId of Object.keys(currentGame.players)) {
+    const player = currentGame.players[playerId];
+    console.log(`Sending game updated to player ${player.playerId}`);
+    try {
+      player.ws.send(JSON.stringify(data));
+    } catch (error) {
+      console.log(`Error: ${error}`);
+      // error should handle when there is circular data structure, don't need to update the current player anyways
+    }
+  }
+}
+
 wss.on('connection', (ws) => {
   ws.isAlive = true;
   console.log('client connected');
@@ -133,6 +149,9 @@ wss.on('connection', (ws) => {
 
       default:
         console.log('Invalid method', response.method);
+    }
+    if (currentGame !== null) {
+      broadCastGameUpdated(currentGame.gameId);
     }
   });
 });
