@@ -50,7 +50,10 @@ function addGame(game) {
 }
 
 function getGame(gameId) {
-  return games[gameId];
+  if (gameId in games) {
+    return games[gameId]
+  }
+  throw Error("Invalid gameId")
 }
 
 function getAllGames() {

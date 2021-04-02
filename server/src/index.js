@@ -10,6 +10,7 @@ const redisUtil = require('./utils/redis.js');
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 // const gameObjects = {} (redis)
+const Joi = require('joi');
 
 function connectClient(ws) {
   const payload = {
@@ -33,111 +34,167 @@ wss.on('connection', (ws) => {
   let currentGame;
   let gameList;
   ws.on('message', (event) => {
-    const response = JSON.parse(event);
-    console.log('Message from server ', response);
-    switch (response.requestType) {
-      case 'createGame':
-        // validation
-        currentGame = game.initializeGame(
-          response.info.goal,
-          response.info.name
-        );
-        currentGame.handleJoin(ws, true);
-        redisUtil.addGame(currentGame);
-        break;
-
-      case 'joinGame':
-        // validation
-        currentGame = redisUtil.getGame(response.gameId);
-        currentGame.handleJoin(ws, false);
-        redisUtil.updateGame(currentGame);
-        break;
-
-      case 'startGame':
-        try {
-          currentGame = redisUtil.getGame(response.gameId);
-          currentGame.handleStart(redisUtil);
-          ws.send(
-            JSON.stringify({
-              event: 'gameStarted',
-              status: '200',
-            })
-          );
-          redisUtil.updateGame(currentGame);
-        } catch (error) {
-          console.log(error);
-          ws.send({ error: error.message });
-        }
-
-        break;
-
-      case 'playCard':
-        try {
-          currentGame = redisUtil.getGame(response.gameId);
-          currentGame.handleSelect(response.playerId, response.cardId);
-          ws.send(
-            JSON.stringify({
-              event: 'playCard',
-              status: '200',
-            })
-          );
-          redisUtil.updateGame(currentGame);
-        } catch (error) {
-          console.log(error);
-          ws.send({ error: error.message });
-        }
-        break;
-
-      case 'pickCard':
-        try {
-          currentGame = redisUtil.getGame(response.gameId);
-          currentGame.handlePickWinningCard(response.playerId, response.cardId);
-          ws.send(
-            JSON.stringify({
-              event: 'pickCard',
-              status: '200',
-            })
-          );
-          redisUtil.updateGame(currentGame);
-        } catch (error) {
-          console.log(error);
-          ws.send({ error: error.message });
-        }
-        break;
-
-      case 'leave':
-        currentGame = redisUtil.getGame(response.gameId);
-        currentGame.handleLeave(ws, response.playerId);
-
-        redisUtil.updateGame(currentGame);
-        break;
-
-      case 'getGameList':
-        console.log('games in redis', redisUtil.getAllGames());
-        gameList = Object.entries(redisUtil.getAllGames()).map(
-          ([gid, obj]) => ({
-            gameId: gid,
-            name: obj.name,
-            goal: obj.goal,
-            maxPlayers: obj.maxPlayers,
-            numberOfPlayer: obj.players.size,
-          })
-        );
-        ws.send(
-          JSON.stringify({
-            event: 'getGameList',
-            status: '200',
-            gameList,
-          })
-        );
-        break;
-
-      default:
-        console.log('Invalid method', response.requestType);
+    const request = JSON.parse(event);
+    console.log('Message from server ', request);
+    if (requestValid(ws, request)) {
+      handleRequest(ws, request);
     }
   });
 });
 
+function requestValid(ws, request) {
+  if (!request.requestType) {
+    ws.send(JSON.stringify({"error": "requestType missing"}));
+    return false;
+  } 
+  let schema = null;
+
+  const validGameIdSchema = Joi.object().keys({
+    gameId: Joi.string().required()
+  }).unknown();
+  const validGamePlayerIdSchema = validGameIdSchema.extend({
+    playerId: Joi.string().required(),
+  }).unknown();
+  const validGamePlayerCardIdSchema = validGamePlayerIdSchema.extend({
+    cardId: Joi.string().required()
+  }).unknown();
+  switch (request.requestType) {
+    case 'createGame':
+      let createGameSchema = Joi.object().keys({
+        info: Joi.object().keys(
+          {
+            goal: Joi.number().required(),
+            name: Joi.string().required()
+          }
+        ).required()
+      }).unknown();
+      schema = createGameSchema;
+      break;
+    case 'joinGame':
+      schema = validGameIdSchema;
+      break;
+    case 'startGame':
+      schema = validGamePlayerIdSchema;
+      break;
+    case 'playCard':
+      schema = validGamePlayerCardIdSchema;
+      break;
+    default:
+      ws.send(JSON.stringify({'error': `Unknown requestType "${request.requestType}"`}))
+      return false;
+  }
+  const errorMessage = schema.validate(request).error
+  if (errorMessage) {
+    ws.send(JSON.stringify({"error": errorMessage}))
+    return false;
+  } else {
+    return true;
+  }
+}
+function handleRequest(ws, request) {
+  switch (request.requestType) {
+    case 'createGame':
+      currentGame = game.initializeGame(
+        request.info.goal,
+        request.info.name
+      );
+      currentGame.handleJoin(ws, true);
+      redisUtil.addGame(currentGame);
+      break;
+
+    case 'joinGame':
+      try {    
+        currentGame = redisUtil.getGame(request.gameId);
+      } catch (error) {
+        ws.send(JSON.stringify({'error': error.message}));
+        break;
+      }      
+      currentGame.handleJoin(ws, false);
+      redisUtil.updateGame(currentGame);
+      break;
+
+    case 'startGame':
+      try {
+        currentGame = redisUtil.getGame(request.gameId);
+        currentGame.handleStart(request.playerId, redisUtil);
+        ws.send(
+          JSON.stringify({
+            event: 'gameStarted',
+            status: '200',
+          })
+        );
+        redisUtil.updateGame(currentGame);
+      } catch (error) {
+        console.log(error);
+        ws.send({ error: error.message });
+      }
+      break;
+
+    case 'playCard':
+      try {
+        currentGame = redisUtil.getGame(request.gameId);
+        currentGame.handleSelect(request.playerId, request.cardId);
+        ws.send(
+          JSON.stringify({
+            event: 'playCard',
+            status: '200',
+          })
+        );
+        redisUtil.updateGame(currentGame);
+      } catch (error) {
+        console.log(error);
+        ws.send({ error: error.message });
+      }
+      break;
+
+    case 'pickCard':
+      try {
+        currentGame = redisUtil.getGame(request.gameId);
+        currentGame.handlePickWinningCard(request.playerId, request.cardId);
+        ws.send(
+          JSON.stringify({
+            event: 'pickCard',
+            status: '200',
+          })
+        );
+        redisUtil.updateGame(currentGame);
+      } catch (error) {
+        console.log(error);
+        ws.send({ error: error.message });
+      }
+      break;
+
+    case 'leave':
+      currentGame = redisUtil.getGame(request.gameId);
+      currentGame.handleLeave(ws, request.playerId);
+
+      redisUtil.updateGame(currentGame);
+      break;
+
+    case 'getGameList':
+      console.log('games in redis', redisUtil.getAllGames());
+      gameList = Object.entries(redisUtil.getAllGames()).map(
+        ([gid, obj]) => ({
+          gameId: gid,
+          name: obj.name,
+          goal: obj.goal,
+          maxPlayers: obj.maxPlayers,
+          numberOfPlayer: obj.players.size,
+        })
+      );
+      ws.send(
+        JSON.stringify({
+          event: 'getGameList',
+          status: '200',
+          gameList,
+        })
+      );
+      break;
+
+    default:
+      console.log('Invalid method', request.requestType);
+  }
+}
 // Ping clients every 10 seconds
 setInterval(() => {
   wss.clients.forEach((ws) => {

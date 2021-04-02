@@ -46,7 +46,7 @@ function initializeGame(goal, name, maxPlayers) {
  * Start an idle game
  */
 Game.prototype.handleStart = function (playerId, redis) {
-  if (!this.player.get(playerId).host) {
+  if (!this.players.get(playerId).host) {
     throw new Error("Not host. Can't start game");
   }
 
@@ -86,12 +86,12 @@ Game.prototype.handleStart = function (playerId, redis) {
  */
 Game.prototype.handleJoin = function (ws, host) {
   let player = createPlayer(ws);
-  player = omit(player, 'ws');
-
   player.host = host;
+  this.players.set(player.playerId, player)
+  player = omit(player, 'ws');
   ws.send(
     JSON.stringify({
-      event: 'joinGame',
+      event: 'joinedGame',
       status: '200',
       player,
       game: {
@@ -148,6 +148,9 @@ Game.prototype.handleLeave = function (ws, playerId) {
  * Handles player card selction
  */
 Game.prototype.handleSelect = function (playerId, cardId) {
+  if (!(playerId in this.players)){
+    throw Error(`playerId ${playerId} is not valid or not part of this game`)
+  }
   const player = this.players.get(playerId);
   if (player.status === 0 && player.hand.includes(cardId)) {
     // Card not selected
