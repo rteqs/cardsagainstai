@@ -5,12 +5,13 @@ const app = require('./app');
 const config = require('./utils/config');
 const logger = require('./utils/logger');
 
-const game = require('./game.js')
-const redisUtil = require('./utils/redis.js')
+const game = require('./game.js');
+const redisUtil = require('./utils/redis.js');
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 // const gameObjects = {} (redis)
+
 function connectClient(ws) {
   const id = uuidv4();
   const payload = {
@@ -32,50 +33,104 @@ wss.on('connection', (ws) => {
     ws.isAlive = true;
   });
   // Receiving message from client
+  let currentGame;
+  let gameList;
   ws.on('message', (event) => {
-    const response = JSON.parse(event)
+    const response = JSON.parse(event);
     console.log('Message from server ', response);
-    let currentGame = playerId = null;
     switch (response.requestType) {
       case 'createGame':
-        currentGame = game.initializeGame()
-        redisUtil.addGame(currentGame)
-        ws.send(JSON.stringify({"event": "gameCreated", "data": {"game": currentGame}}))
-        break;
-      case 'joinGame':
-        currentGame = redisUtil.getGame(response.gameId)
-        playerId = currentGame.addPlayer(ws)
-        redisUtil.updateGame(currentGame)
-        ws.send(JSON.stringify({'event': "joinedGame", "data": {"game": currentGame, "playerId": playerId}}))
-        break;
-      case 'addNewPlayer':
-        currentGame = redisUtil.getGame(response.gameId)
-        playerId = currentGame.addPlayer(ws)
-        redisUtil.updateGame(currentGame)
-        ws.send(JSON.stringify({'event': "newPlayerAdded", "data": {"game": currentGame, "playerId": playerId}}))
-        break;
-      case 'startGame':
-        currentGame = redisUtil.getGame(response.gameId)
-        currentGame.start(ws, redisUtil)
-        redisUtil.updateGame(currentGame)
-        // console.log("Current game: " + JSON.stringify(currentGame, undefined, 2))
-        ws.send(JSON.stringify({'event': "gameStarted", "data": {"game": currentGame}}))
-        break;
-      case 'getGameObj': // TODO: Remove. only testing
-        ws.send(JSON.stringify({'event': 'retrievedGameObj', 'data': {'game': redisUtil.getGame(response.gameId)}}))
-        break;
-      case 'selectCard':
-        currentGame = redisUtil.getGame(response.gameId)
-        currentGame.handleSelect(response.playerId, response.cardId)
-        redisUtil.updateGame(currentGame)
-        ws.send(JSON.stringify({'event': 'cardSelected', 'data': {'game': currentGame}}));
-        break;
-      // TODO: add getGameList for displaying in lobby
-      case 'leave':
+        // validation
+        currentGame = game.initializeGame();
+        currentGame.handleJoin(ws, true);
+        redisUtil.addGame(currentGame);
         break;
 
-      case 'play':
+      case 'joinGame':
+        // validation
+        currentGame = redisUtil.getGame(response.gameId);
+        currentGame.handleJoin(ws, false);
+        redisUtil.updateGame(currentGame);
         break;
+
+      case 'startGame':
+        try {
+          currentGame = redisUtil.getGame(response.gameId);
+          currentGame.start(redisUtil);
+          // console.log("Current game: " + JSON.stringify(currentGame, undefined, 2))
+          ws.send(
+            JSON.stringify({
+              event: 'gameStarted',
+              status: '200',
+              message: '',
+            })
+          );
+          redisUtil.updateGame(currentGame);
+        } catch (error) {
+          console.log(error);
+          ws.send({ error: error.message });
+        }
+
+        break;
+
+      case 'playCard':
+        try {
+          currentGame = redisUtil.getGame(response.gameId);
+          currentGame.handleSelect(response.playerId, response.cardId);
+          ws.send(
+            JSON.stringify({
+              event: 'playCard',
+              status: '200',
+            })
+          );
+          redisUtil.updateGame(currentGame);
+        } catch (error) {
+          console.log(error);
+          ws.send({ error: error.message });
+        }
+        break;
+
+      case 'pickCard':
+        try {
+          currentGame = redisUtil.getGame(response.gameId);
+          currentGame.handlePickWinningCard(response.playerId, response.cardId);
+          ws.send(
+            JSON.stringify({
+              event: 'pickCard',
+              status: '200',
+            })
+          );
+          redisUtil.updateGame(currentGame);
+        } catch (error) {
+          console.log(error);
+          ws.send({ error: error.message });
+        }
+        break;
+
+      case 'leave':
+        currentGame = redisUtil.getGame(response.gameId);
+        currentGame.handleLeave(ws, response.playerId);
+
+        redisUtil.updateGame(currentGame);
+        break;
+
+      case 'getGameList':
+        gameList = Object.values(redisUtil.getAllGames()).map(([gid, obj]) => ({
+          gid,
+          name: obj.name,
+          goal: obj.goal,
+          maxPlayers: obj.maxPlayers,
+          numberOfPlayer: obj.players.size,
+        }));
+        ws.send(
+          JSON.stringify({
+            event: 'getGameList',
+            status: '200',
+            gameList,
+          })
+        );
+        break;
+
       default:
         console.log('Invalid method', response.method);
     }

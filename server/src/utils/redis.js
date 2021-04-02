@@ -16,15 +16,15 @@
 const csv = require('csv-parser');
 const fs = require('fs');
 
-const blackCards = []
-const whiteCards = []
+const blackCards = [];
+const whiteCards = [];
 
 function loadBlackCardsFromFile() {
   fs.createReadStream('./resources/blackcards.csv')
     .pipe(csv())
     .on('data', (row) => {
       // console.log(row);
-      blackCards.push(row)
+      blackCards.push(row);
     })
     .on('end', () => {
       console.log('CSV file successfully processed');
@@ -36,58 +36,63 @@ function loadWhiteCardsFromFile() {
     .pipe(csv())
     .on('data', (row) => {
       // console.log(row);
-      whiteCards.push(row)
+      whiteCards.push(row);
     })
     .on('end', () => {
       console.log('CSV file successfully processed');
     });
 }
 
-const games = {}
+const games = {};
 
 function addGame(game) {
-  games[game.gameId] = game
+  games[game.gameId] = game;
 }
 
 function getGame(gameId) {
-  return games[gameId]
+  return games[gameId];
+}
+
+function getAllGames() {
+  return games;
 }
 
 function updateGame(game) {
-  addGame(game) // For now this just overrides the game
+  addGame(game); // For now this just overrides the game
 }
 
 function getNCardsFromArray(n, array, idOnly) {
-  console.log(n + ", " + array.length + ", " + idOnly )
-  let requestedSet = [];
-  let clonedArray = [...array]; 
+  console.log(`${n}, ${array.length}, ${idOnly}`);
+  const requestedSet = [];
+  const clonedArray = [...array];
   for (i = 0; i < n; i++) {
-    let index = Math.floor(Math.random()*clonedArray.length)
-    let element = clonedArray[index]
-    clonedArray.splice(index, 1)
+    const index = Math.floor(Math.random() * clonedArray.length);
+    let element = clonedArray[index];
+    clonedArray.splice(index, 1);
     if (idOnly) {
-      element = element.id
+      element = element.id;
     }
     requestedSet.push(element);
   }
-  console.log("Requestedset: " + requestedSet)
+  console.log(`Requestedset: ${requestedSet}`);
   return requestedSet;
 }
 
 function getQuestionCards(numCards, idOnly) {
-  return getNCardsFromArray(numCards, blackCards, idOnly)
+  return getNCardsFromArray(numCards, blackCards, idOnly);
 }
 
 function getAnswerCards(numCards, idOnly) {
-  return getNCardsFromArray(numCards, whiteCards, idOnly)
+  return getNCardsFromArray(numCards, whiteCards, idOnly);
 }
 
-loadBlackCardsFromFile()
-loadWhiteCardsFromFile()
+loadBlackCardsFromFile();
+loadWhiteCardsFromFile();
 module.exports = {
   addGame,
   getGame,
   updateGame,
   getQuestionCards,
-  getAnswerCards
-}
+  getAnswerCards,
+  getAllGames,
+};
