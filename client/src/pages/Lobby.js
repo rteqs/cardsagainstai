@@ -10,10 +10,9 @@ import history from '../history';
 function Lobby({ ws }) {
   const location = useLocation();
   // BREAKING CHANGE
-  const [games, setGames] = useState([]);
+  const [games, setGames] = useState(location.state.games);
 
   useEffect(() => {
-    console.log(games);
     setGames(location.state.games);
   }, [location]);
 
@@ -40,7 +39,7 @@ function Lobby({ ws }) {
         {games.map((val) => (
           <div className="gameContainer">
             <p>Name: {val.name}</p>
-            <div className="peopleContainer">
+            {val.numberOfPlayer === 0? <div />: <div className="peopleContainer">
               Players:⠀
               {val.players.map((p, pindex) => (
                 <div>
@@ -48,11 +47,11 @@ function Lobby({ ws }) {
                   {pindex < val.players.length - 1 ? <span>,⠀</span> : <span />}
                 </div>
               ))}
-            </div>
+            </div>}
             <p>Goal: {val.goal}</p>
             <button
               onClick={() => {
-                handleJoin(val.gameID);
+                handleJoin(val.gameId);
               }}
               type="button"
               className="startGameButton"
