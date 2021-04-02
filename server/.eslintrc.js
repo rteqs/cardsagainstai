@@ -16,6 +16,7 @@ module.exports = {
       { props: true, ignorePropertyModificationsFor: ['ws'] },
     ],
     'consistent-return': 'off',
+    'no-use-before-define': ['error', { functions: false, classes: true }],
   },
   plugins: ['prettier'],
 };
