@@ -48,19 +48,9 @@ function requestValid(ws, request) {
     return false;
   } 
   let schema = null;
-
-  const validGameIdSchema = Joi.object().keys({
-    gameId: Joi.string().required()
-  }).unknown();
-  const validGamePlayerIdSchema = validGameIdSchema.extend({
-    playerId: Joi.string().required(),
-  }).unknown();
-  const validGamePlayerCardIdSchema = validGamePlayerIdSchema.extend({
-    cardId: Joi.string().required()
-  }).unknown();
   switch (request.requestType) {
     case 'createGame':
-      let createGameSchema = Joi.object().keys({
+      schema = Joi.object().keys({
         info: Joi.object().keys(
           {
             goal: Joi.number().required(),
@@ -68,16 +58,26 @@ function requestValid(ws, request) {
           }
         ).required()
       }).unknown();
-      schema = createGameSchema;
       break;
     case 'joinGame':
-      schema = validGameIdSchema;
+      schema = Joi.object().keys({
+        gameId: Joi.string().required()
+      }).unknown();
       break;
     case 'startGame':
-      schema = validGamePlayerIdSchema;
+    case 'leave':
+      schema = Joi.object().keys({
+        gameId: Joi.string().required(),
+        playerId: Joi.string().required(),
+      }).unknown();
       break;
     case 'playCard':
-      schema = validGamePlayerCardIdSchema;
+    case 'pickCard':
+      schema = Joi.object().keys({
+        gameId: Joi.string().required(),
+        playerId: Joi.string().required(),
+        cardId: Joi.string().required()
+      }).unknown();
       break;
     default:
       ws.send(JSON.stringify({'error': `Unknown requestType "${request.requestType}"`}))
