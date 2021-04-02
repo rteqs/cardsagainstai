@@ -11,6 +11,7 @@ const redisUtil = require('./utils/redis.js');
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 // const gameObjects = {} (redis)
+
 function connectClient(ws) {
   const id = uuidv4();
   const payload = {
@@ -18,6 +19,22 @@ function connectClient(ws) {
     id,
   };
   ws.send(JSON.stringify(payload));
+}
+
+function broadCastGameUpdated(gameId) {
+  const currentGame = redisUtil.getGame(gameId);
+  const data = { event: 'gameUpdated', data: { game: currentGame } };
+  // let wsList = []
+  for (playerId of Object.keys(currentGame.players)) {
+    const player = currentGame.players[playerId];
+    console.log(`Sending game updated to player ${player.playerId}`);
+    try {
+      player.ws.send(JSON.stringify(data));
+    } catch (error) {
+      console.log(`Error: ${error}`);
+      // error should handle when there is circular data structure, don't need to update the current player anyways
+    }
+  }
 }
 
 wss.on('connection', (ws) => {
@@ -32,90 +49,111 @@ wss.on('connection', (ws) => {
     ws.isAlive = true;
   });
   // Receiving message from client
+  let currentGame;
+  let gameList;
   ws.on('message', (event) => {
     const response = JSON.parse(event);
     console.log('Message from server ', response);
-    let currentGame = (player = null);
     switch (response.requestType) {
       case 'createGame':
+        // validation
         currentGame = game.initializeGame();
+        currentGame.handleJoin(ws, true);
         redisUtil.addGame(currentGame);
-        ws.send(
-          JSON.stringify({ event: 'gameCreated', data: { game: currentGame } })
-        );
         break;
+
       case 'joinGame':
+        // validation
         currentGame = redisUtil.getGame(response.gameId);
-        player = currentGame.addPlayer(ws);
+        currentGame.handleJoin(ws, false);
         redisUtil.updateGame(currentGame);
-        ws.send(JSON.stringify({ event: 'joinedGame', data: { player } }));
         break;
-      case 'addNewPlayer':
-        currentGame = redisUtil.getGame(response.gameId);
-        player = currentGame.addPlayer(ws);
-        redisUtil.updateGame(currentGame);
-        ws.send(JSON.stringify({ event: 'newPlayerAdded', data: { player } }));
-        break;
+
       case 'startGame':
-        currentGame = redisUtil.getGame(response.gameId);
-        currentGame.start(ws, redisUtil);
-        redisUtil.updateGame(currentGame);
-        // console.log("Current game: " + JSON.stringify(currentGame, undefined, 2))
-        ws.send(
-          JSON.stringify({ event: 'gameStarted', data: { game: currentGame } })
-        );
+        try {
+          currentGame = redisUtil.getGame(response.gameId);
+          currentGame.start(redisUtil);
+          // console.log("Current game: " + JSON.stringify(currentGame, undefined, 2))
+          ws.send(
+            JSON.stringify({
+              event: 'gameStarted',
+              status: '200',
+              message: '',
+            })
+          );
+          redisUtil.updateGame(currentGame);
+        } catch (error) {
+          console.log(error);
+          ws.send({ error: error.message });
+        }
+
         break;
-      case 'pickCzar': // TODO: remove because this is game logic add as part of startGame
+
+      case 'playCard':
+        try {
+          currentGame = redisUtil.getGame(response.gameId);
+          currentGame.handleSelect(response.playerId, response.cardId);
+          ws.send(
+            JSON.stringify({
+              event: 'playCard',
+              status: '200',
+            })
+          );
+          redisUtil.updateGame(currentGame);
+        } catch (error) {
+          console.log(error);
+          ws.send({ error: error.message });
+        }
+        break;
+
+      case 'pickCard':
+        try {
+          currentGame = redisUtil.getGame(response.gameId);
+          currentGame.handlePickWinningCard(response.playerId, response.cardId);
+          ws.send(
+            JSON.stringify({
+              event: 'pickCard',
+              status: '200',
+            })
+          );
+          redisUtil.updateGame(currentGame);
+        } catch (error) {
+          console.log(error);
+          ws.send({ error: error.message });
+        }
+        break;
+
+      case 'leave':
         currentGame = redisUtil.getGame(response.gameId);
-        currentGame.pickCzar();
-        // Loop through each player and send an appropriate event to each saying whether they were chosen to be czar or not
-        currentGame.players.forEach((player) => {
-          const data = { event: 'czarPicked', data: { chosen: false } };
-          if (player.playerId === currentGame.czar.playerId) {
-            data.data.chosen = true;
-          }
-          player.ws.send(JSON.stringify(data));
-        });
+        currentGame.handleLeave(ws, response.playerId);
+
         redisUtil.updateGame(currentGame);
         break;
-      case 'getGameObj': // TODO: Remove only testing
+
+      case 'getGameList':
+        console.log(redisUtil.getAllGames());
+        gameList = Object.values(redisUtil.getAllGames()).map(([gid, obj]) => ({
+          gid,
+          name: obj.name,
+          goal: obj.goal,
+          maxPlayers: obj.maxPlayers,
+          numberOfPlayer: obj.players.size,
+        }));
         ws.send(
           JSON.stringify({
-            event: 'retrievedGameObj',
-            data: { game: redisUtil.getGame(response.gameId) },
+            event: 'getGameList',
+            status: '200',
+            gameList,
           })
         );
         break;
-      case 'selectCard':
-        currentGame = redisUtil.getGame(response.gameId);
-        player = currentGame.players[response.playerId];
-        if (player.status === 0) {
-          // Card not selected
-          currentGame.board.currentAnswerCardsMap[player.playerId] =
-            response.cardId;
-          player.hand.splice(player.hand.indexOf(cardId), 1);
-          currentGame.players[response.playerId] = player;
-          redisUtil.updateGame(currentGame);
-          ws.send(
-            JSON.stringify({
-              event: 'cardSelected',
-              data: { game: currentGame },
-            })
-          );
-        } else {
-          // Already submitted or czar
-          // TODO: How to send errors?
-        }
-        break;
-      // TODO: add getGameList for displaying in lobby
-      case 'leave':
-        break;
 
-      case 'play':
-        break;
       default:
         console.log('Invalid method', response.requestType);
     }
+    // if (currentGame !== null) {
+    //   broadCastGameUpdated(currentGame.gameId);
+    // }
   });
 });
 

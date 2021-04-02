@@ -53,19 +53,28 @@ function getGame(gameId) {
   return games[gameId];
 }
 
+function getAllGames() {
+  return games;
+}
+
 function updateGame(game) {
   addGame(game); // For now this just overrides the game
 }
 
 function getNCardsFromArray(n, array, idOnly) {
+  console.log(`${n}, ${array.length}, ${idOnly}`);
   const requestedSet = [];
-  for (let i = 0; i < n; i++) {
-    let element = array[Math.floor(Math.random() * array.length)];
+  const clonedArray = [...array];
+  for (i = 0; i < n; i++) {
+    const index = Math.floor(Math.random() * clonedArray.length);
+    let element = clonedArray[index];
+    clonedArray.splice(index, 1);
     if (idOnly) {
       element = element.id;
     }
     requestedSet.push(element);
   }
+  console.log(`Requestedset: ${requestedSet}`);
   return requestedSet;
 }
 
@@ -83,10 +92,13 @@ function getAnswerCards(numCards, idOnly) {
   return getNCardsFromArray(numCards, whiteCards, idOnly);
 }
 
+loadBlackCardsFromFile();
+loadWhiteCardsFromFile();
 module.exports = {
   addGame,
   getGame,
   updateGame,
   getQuestionCards,
   getAnswerCards,
+  getAllGames,
 };

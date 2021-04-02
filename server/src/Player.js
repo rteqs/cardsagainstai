@@ -1,7 +1,8 @@
 const { v4: uuidv4 } = require('uuid');
 
-function Player(ws) {
+function Player(ws, name) {
   this.playerId = uuidv4(); // uuid
+  this.name = name; //
   this.hand = []; // number (cardId) | Array
   this.score = 0; // number
   this.host = false; // if player is a host
