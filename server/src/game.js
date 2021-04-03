@@ -45,7 +45,7 @@ function initializeGame(goal, name, maxPlayers) {
 /**
  * Start an idle game
  */
-Game.prototype.handleStart = function (playerId, redis) {
+Game.prototype.handleStart = function (ws, playerId, redis) {
   if (!this.players.get(playerId).host) {
     throw new Error("Not host. Can't start game");
   }
@@ -59,7 +59,7 @@ Game.prototype.handleStart = function (playerId, redis) {
   }
 
   const fullHandSize = 10;
-  const numPlayers = Object.keys(this.players).length;
+  const numPlayers = this.players.size;
   const targetPoints = 5;
   const totalRounds = numPlayers * (targetPoints - 1) + targetPoints;
   const numWhiteCards = numPlayers * totalRounds;
@@ -67,17 +67,29 @@ Game.prototype.handleStart = function (playerId, redis) {
   this.answerCards = redis.getAnswerCards(numWhiteCards, true);
   shuffle(this.questionCards);
   shuffle(this.answerCards);
+  // console.log('this.questionCards:' + this.questionCards)
+  // console.log('this.answerCards' + this.answerCards)
 
   // console.log("BOARD: " + JSON.stringify(this.board, undefined, 2))
   this.board.currentQuestionCard = this.questionCards.pop();
-  this.players = this.replenishHand(this.players, fullHandSize);
+  this.replenishHand(this.players, fullHandSize);
   this.pickCzar();
   this.state = 1;
   Array.from(this.players.values()).forEach((p) => {
+    console.log("player: " + p.playerId)
     this.updatePlayer(p.ws, p.playerId);
   });
   this.updateBoard();
   this.updatePlayerList();
+
+  ws.send(
+    JSON.stringify({
+      event: 'gameStarted',
+      status: '200',
+      questionCards: redis.getCardDataFor(this.questionCards, true),
+      answerCards: redis.getCardDataFor(this.answerCards, false)
+    })
+  );
 };
 
 /**
@@ -246,7 +258,7 @@ Game.prototype.updateBoard = function () {
  * relevant to them (individual)
  */
 Game.prototype.updatePlayer = function (ws, id) {
-  if (!this.players.get[id]) {
+  if (!this.players.get(id)) {
     throw new Error('Not in game');
   }
 
@@ -280,8 +292,8 @@ Game.prototype.updatePlayerList = function () {
  * @returns
  */
 Game.prototype.pickCzar = function () {
-  const index = this.turnNum % this.players.size;
-  const player = Array.from(this.players.values())[index];
+  const index = this.board.turnNum % this.players.size;
+  let player = this.players.get(Array.from(this.players.keys())[index])
   player.status = 2;
   this.czar = player.id;
 };
@@ -289,7 +301,6 @@ Game.prototype.pickCzar = function () {
 /**
  * Deals cards to players until they have fullHandSize cards
  * @param fullHandSize Number of cards to replenish to
- * @returns map of players
  */
 Game.prototype.replenishHand = function (fullHandSize) {
   Array.from(this.players.values()).forEach((player) => {

@@ -116,20 +116,13 @@ function handleRequest(ws, request) {
     case 'startGame':
       try {
         currentGame = redisUtil.getGame(request.gameId);
-        currentGame.handleStart(request.playerId, redisUtil);
-        ws.send(
-          JSON.stringify({
-            event: 'gameStarted',
-            status: '200',
-          })
-        );
+        currentGame.handleStart(ws, request.playerId, redisUtil);
         redisUtil.updateGame(currentGame);
       } catch (error) {
         console.log(error);
         ws.send({ error: error.message });
       }
       break;
-
     case 'playCard':
       try {
         currentGame = redisUtil.getGame(request.gameId);

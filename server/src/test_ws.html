@@ -133,7 +133,7 @@
         case 'addNewPlayer':
         case 'startGame':
         case 'getGameObj':
-          data = { requestType: requestType, gameId: currentGame.gameId };
+          data = { requestType: requestType, gameId: currentGame.gameId, playerId: playerId};
           ws.send(JSON.stringify(data));
           logEvent(
             `Sent ${requestType} request to gameId:${currentGame.gameId}`
@@ -172,12 +172,15 @@
           logEvent('We are connected to the server!');
           break;
         case 'gameCreated':
+          console.log('response: ' + JSON.stringify(response, undefined, 2))
           currentGame = response.data.game;
+          playerId = response.player.playerId;
           logEvent(`Game created with id: ${currentGame.gameId}`);
           break;
         case 'joinedGame':
           currentGame = response.game;
           currentPlayerId = response.player.playerId;
+          playerId = currentPlayerId
           logEvent(`Player created and joined with id: ${currentPlayerId}`);
           break;
         case 'newPlayerAdded':
@@ -188,11 +191,10 @@
           currentPlayerId = response.data.playerId;
           logEvent(`Player created and added with id: ${currentPlayerId}`);
           break;
-        case 'gameStarted':
-          currentGame = response.data.game;
-          // console.log(JSON.stringify(game, undefined, 2))
-          logEvent(`Started game with id ${currentGame.gameId}`);
-          break;
+        // case 'gameStarted':
+        //   console.log(JSON.stringify(response, undefined, 2))
+        //   logEvent(`Started game with id ${currentGame.gameId}`);
+        //   break;
         case 'retrievedGameObj':
           currentGame = response.data.game;
           logEvent(`Retrieved game with id ${currentGame.gameId}`);

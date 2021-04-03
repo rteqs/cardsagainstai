@@ -16,15 +16,15 @@
 const csv = require('csv-parser');
 const fs = require('fs');
 
-const blackCards = [];
-const whiteCards = [];
+const blackCards = new Map();
+const whiteCards = new Map();
 
 function loadBlackCardsFromFile() {
   fs.createReadStream('./resources/blackcards.csv')
     .pipe(csv())
     .on('data', (row) => {
       // console.log(row);
-      blackCards.push(row);
+      blackCards.set(row.id, row);
     })
     .on('end', () => {
       console.log('CSV file successfully processed');
@@ -36,7 +36,7 @@ function loadWhiteCardsFromFile() {
     .pipe(csv())
     .on('data', (row) => {
       // console.log(row);
-      whiteCards.push(row);
+      whiteCards.set(row.id, row);
     })
     .on('end', () => {
       console.log('CSV file successfully processed');
@@ -65,7 +65,7 @@ function updateGame(game) {
 }
 
 function getNCardsFromArray(n, array, idOnly) {
-  console.log(`${n}, ${array.length}, ${idOnly}`);
+  // console.log(`${n}, ${array.length}, ${idOnly}`);
   const requestedSet = [];
   const clonedArray = [...array];
   for (i = 0; i < n; i++) {
@@ -77,7 +77,7 @@ function getNCardsFromArray(n, array, idOnly) {
     }
     requestedSet.push(element);
   }
-  console.log(`Requestedset: ${requestedSet}`);
+  // console.log(`Requestedset: ${requestedSet}`);
   return requestedSet;
 }
 
@@ -85,14 +85,30 @@ function getQuestionCards(numCards, idOnly) {
   if (blackCards.length === 0) {
     loadBlackCardsFromFile();
   }
-  return getNCardsFromArray(numCards, blackCards, idOnly);
+  return getNCardsFromArray(numCards, blackCards.values(), idOnly);
 }
 
 function getAnswerCards(numCards, idOnly) {
   if (whiteCards.length === 0) {
     loadWhiteCardsFromFile();
   }
-  return getNCardsFromArray(numCards, whiteCards, idOnly);
+  return getNCardsFromArray(numCards, whiteCards.values(), idOnly);
+}
+
+function getCardDataFor(cardIdList, useBlack) {
+  const reqCardData = {};
+  // console.log("cardIdList: " + cardIdList)
+  cardIdList.forEach(cardId => {
+    let cardData = null;
+    if (useBlack) {
+      cardData = blackCards.get(cardId);
+    } else {
+      cardData = whiteCards.get(cardId);
+    }
+    reqCardData[cardId] = cardData;
+  });
+  // console.log(reqCardData)
+  return reqCardData;
 }
 
 loadBlackCardsFromFile();
@@ -104,4 +120,5 @@ module.exports = {
   getQuestionCards,
   getAnswerCards,
   getAllGames,
+  getCardDataFor
 };
