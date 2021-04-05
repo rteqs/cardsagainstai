@@ -76,7 +76,7 @@ Game.prototype.handleStart = function (ws, playerId, redis) {
   this.pickCzar();
   this.state = 1;
   Array.from(this.players.values()).forEach((p) => {
-    console.log("player: " + p.playerId)
+    console.log(`player: ${p.playerId}`);
     this.updatePlayer(p.ws, p.playerId);
   });
   this.updateBoard();
@@ -87,7 +87,7 @@ Game.prototype.handleStart = function (ws, playerId, redis) {
       event: 'gameStarted',
       status: '200',
       questionCards: redis.getCardDataFor(this.questionCards, true),
-      answerCards: redis.getCardDataFor(this.answerCards, false)
+      answerCards: redis.getCardDataFor(this.answerCards, false),
     })
   );
 };
@@ -99,7 +99,7 @@ Game.prototype.handleStart = function (ws, playerId, redis) {
 Game.prototype.handleJoin = function (ws, host) {
   let player = createPlayer(ws);
   player.host = host;
-  this.players.set(player.playerId, player)
+  this.players.set(player.playerId, player);
   player = omit(player, 'ws');
   ws.send(
     JSON.stringify({
@@ -160,8 +160,8 @@ Game.prototype.handleLeave = function (ws, playerId) {
  * Handles player card selction
  */
 Game.prototype.handleSelect = function (playerId, cardId) {
-  if (!(playerId in this.players)){
-    throw Error(`playerId ${playerId} is not valid or not part of this game`)
+  if (!(playerId in this.players)) {
+    throw Error(`playerId ${playerId} is not valid or not part of this game`);
   }
   const player = this.players.get(playerId);
   if (player.status === 0 && player.hand.includes(cardId)) {
@@ -293,7 +293,7 @@ Game.prototype.updatePlayerList = function () {
  */
 Game.prototype.pickCzar = function () {
   const index = this.board.turnNum % this.players.size;
-  let player = this.players.get(Array.from(this.players.keys())[index])
+  const player = this.players.get(Array.from(this.players.keys())[index]);
   player.status = 2;
   this.czar = player.id;
 };
