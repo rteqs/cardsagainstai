@@ -1,31 +1,23 @@
-import React, { useRef } from 'react';
+import React from 'react';
+import { useDispatch } from 'react-redux';
 import { Route, Switch } from 'react-router-dom';
 import Lobby from '../pages/Lobby';
-import GameScreen from '../pages/GameScreen';
+// import GameScreen from '../pages/GameScreen';
+import GameScreen from '../pages/GameScreenFunctional';
+import { wsConnect } from '../store/actions';
 import CreateGame from '../pages/CreateGame';
 import WinScreen from '../pages/WinScreen';
-import Api from '../Api';
-// import history from '../history';
+// import Api from '../Api';
 
 export default function App() {
-  const ws = useRef(null);
-
-  const handleEnterLobby = async () => {
-    ws.current = await Api.connectToServer();
-    Api.getActiveGames(ws.current);
-    console.log('Awaiting server response');
-    // history.push('/lobby');
-  };
+  const dispatch = useDispatch();
 
   return (
     <Switch>
-      <Route
-        path="/createGame/"
-        render={() => <CreateGame ws={ws.current} />}
-      />
+      <Route path="/createGame/" component={CreateGame} />
       <Route path="/games/:gameID/win" component={WinScreen} />
       <Route path="/games/:gameID" component={GameScreen} />
-      <Route path="/lobby" render={() => <Lobby ws={ws.current} />} />
+      <Route path="/lobby" component={Lobby} />
       <Route
         path="/"
         render={() => (
@@ -55,7 +47,9 @@ export default function App() {
               <button
                 className="lobbyButton"
                 type="button"
-                onClick={handleEnterLobby}
+                onClick={() => {
+                  dispatch(wsConnect('ws://localhost:8080'));
+                }}
               >
                 Go to The Lobby
               </button>

@@ -1,24 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import PropTypes from 'prop-types';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import Api from '../Api';
 import '../styles/lobby-styles.css';
 import history from '../history';
 
 // TODO: MAKE GAME CARDS DYNAMIC
 
-function Lobby({ ws }) {
-  const location = useLocation();
-  // BREAKING CHANGE
-  const [games, setGames] = useState(location.state.games);
-
-  useEffect(() => {
-    setGames(location.state.games);
-  }, [location]);
+function Lobby() {
+  const games = useSelector((state) => state.lobby);
+  const ws = useSelector((state) => state.websocket.ws);
 
   const handleJoin = (gameID) => {
     Api.joinGame(ws, gameID);
-    history.push(`/games/${gameID}`);
   };
 
   return (
@@ -39,15 +32,13 @@ function Lobby({ ws }) {
         {games.map((val) => (
           <div className="gameContainer">
             <p>Name: {val.name}</p>
-            {val.numberOfPlayer === 0? <div />: <div className="peopleContainer">
-              Players:⠀
-              {val.players.map((p, pindex) => (
-                <div>
-                  {p.name}
-                  {pindex < val.players.length - 1 ? <span>,⠀</span> : <span />}
-                </div>
-              ))}
-            </div>}
+            {val.numberOfPlayer === 0 ? (
+              <div />
+            ) : (
+              <div className="peopleContainer">
+                Players:⠀{val.players.length}
+              </div>
+            )}
             <p>Goal: {val.goal}</p>
             <button
               onClick={() => {
@@ -64,9 +55,5 @@ function Lobby({ ws }) {
     </div>
   );
 }
-
-Lobby.propTypes = {
-  ws: PropTypes.instanceOf(WebSocket).isRequired,
-};
 
 export default Lobby;

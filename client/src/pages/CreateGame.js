@@ -1,5 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Api from '../Api';
@@ -8,11 +8,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import '../styles/createGame.css';
 
-function CreateGame({ ws }) {
+function CreateGame() {
   let name = '';
   let goal = 8;
   let numAI = 0;
 
+  const ws = useSelector((state) => state.websocket.ws);
   const handleSubmit = () => {
     Api.createGame(ws, name, goal, numAI);
     console.log('awaiting server response');
@@ -72,7 +73,4 @@ function CreateGame({ ws }) {
   );
 }
 
-CreateGame.propTypes = {
-  ws: PropTypes.instanceOf(WebSocket).isRequired,
-};
 export default CreateGame;

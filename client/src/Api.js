@@ -1,95 +1,11 @@
-import history from './history';
-
 function getActiveGames(ws) {
-  if (!ws) {
-    console.log('No websocket socket connection');
-  }
-
   const req = {
     type: 'message',
     requestType: 'getGameList',
     date: Date.now(),
   };
 
-  const response = ws.send(JSON.stringify(req));
-  console.log(response);
-
-  // return [
-  //   {
-  //     gameId: '12131321',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  //   {
-  //     gameId: '12131321',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  //   {
-  //     gameId: '12131321',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  //   {
-  //     gameId: '12131321',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  //   {
-  //     gameId: '12131321',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  //   {
-  //     gameId: '12131321',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  //   {
-  //     gameId: '12131321',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  //
-  //   {
-  //     gameId: 'niceoo',
-  //     name: 'game 1',
-  //     players: [
-  //       { name: 'mot', userId: '0900' },
-  //       { name: 'tom', userId: '12131321' },
-  //       { name: 'mot', userId: '0900' },
-  //     ],
-  //     goal: 8,
-  //   },
-  // ];
+  ws.send(JSON.stringify(req));
 }
 
 function joinGame(ws, gameId) {
@@ -99,7 +15,6 @@ function joinGame(ws, gameId) {
     date: Date.now(),
   };
   ws.send(JSON.stringify(data));
-  return gameId;
 }
 
 function createGame(ws, name, goal, numAI) {
@@ -116,8 +31,13 @@ function createGame(ws, name, goal, numAI) {
   return '183028100';
 }
 
-function getGameInfo(gameId) {
-  console.log(gameId);
+function startGame(ws, playerId, gameId) {
+  console.log('Starting game');
+  const data = { requestType: 'startGame', playerId, gameId };
+  ws.send(JSON.stringify(data));
+}
+
+function getGameInfo() {
   return {
     blackCard: { text: 'niceoo' },
     whiteCards: [
@@ -141,12 +61,24 @@ function getGameInfo(gameId) {
   };
 }
 
-function pickWhiteCard(cardIndex) {
+function playCard(ws, cardIndex, player) {
   console.log(cardIndex);
+  const data = {
+    requestType: 'playWhiteCard',
+    cardPlayed: cardIndex,
+    player,
+  };
+  ws.send(JSON.stringify(data));
 }
 
-function getUserID() {
-  return this.userID;
+function pickCard(ws, cardIndex, player) {
+  console.log(cardIndex);
+  const data = {
+    requestType: 'playWhiteCard',
+    cardPlayed: cardIndex,
+    player,
+  };
+  ws.send(JSON.stringify(data));
 }
 
 function waitForOpenConnection(socket) {
@@ -168,38 +100,9 @@ function waitForOpenConnection(socket) {
   });
 }
 
-// function handleJoin(gameId) {
-//   history.push(`/games/${gameId}`);
-// }
-
-function handleServerMessages(event) {
-  const data = JSON.parse(event.data);
-  console.log(data);
-  switch (data.event) {
-    case 'joinGame': {
-      console.log('Joining game');
-      const { gameId } = data.game;
-      history.push(`/games/${gameId}`);
-      break;
-    }
-
-    case 'getGameList': {
-      console.log('Receiving games');
-      history.push({ pathname: '/lobby', state: { games: data.gameList } });
-      break;
-    }
-
-    default: {
-      console.log('do nothing');
-      break;
-    }
-  }
-}
-
 async function connectToServer() {
   const ws = new WebSocket('ws://localhost:8080');
   await waitForOpenConnection(ws);
-  ws.onmessage = handleServerMessages;
   return ws;
 }
 
@@ -207,9 +110,9 @@ export default {
   getActiveGames,
   createGame,
   getGameInfo,
-  pickWhiteCard,
-  getUserID,
+  playCard,
+  pickCard,
   connectToServer,
   joinGame,
-  handleServerMessages,
+  startGame,
 };
