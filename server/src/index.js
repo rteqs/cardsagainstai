@@ -56,7 +56,7 @@ wss.on('connection', (ws) => {
       case 'startGame':
         try {
           currentGame = redisUtil.getGame(response.gameId);
-          currentGame.handleStart(redisUtil);
+          currentGame.handleStart(response.playerId, redisUtil);
           ws.send(
             JSON.stringify({
               event: 'gameStarted',
@@ -65,8 +65,14 @@ wss.on('connection', (ws) => {
           );
           redisUtil.updateGame(currentGame);
         } catch (error) {
-          console.log(error);
-          ws.send({ error: error.message });
+          console.error('Error', error.message);
+          ws.send(
+            JSON.stringify({
+              event: 'gameStarted',
+              status: '400',
+              message: error.message,
+            })
+          );
         }
 
         break;
@@ -84,7 +90,7 @@ wss.on('connection', (ws) => {
           redisUtil.updateGame(currentGame);
         } catch (error) {
           console.log(error);
-          ws.send({ error: error.message });
+          ws.send(JSON.stringify({ error: error.message }));
         }
         break;
 
@@ -101,7 +107,7 @@ wss.on('connection', (ws) => {
           redisUtil.updateGame(currentGame);
         } catch (error) {
           console.log(error);
-          ws.send({ error: error.message });
+          ws.send(JSON.stringify({ error: error.message }));
         }
         break;
 
@@ -121,6 +127,7 @@ wss.on('connection', (ws) => {
             goal: obj.goal,
             maxPlayers: obj.maxPlayers,
             numberOfPlayer: obj.players.size,
+            players: obj.playersToList(),
           })
         );
         ws.send(

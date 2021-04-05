@@ -46,7 +46,11 @@ function initializeGame(goal, name, maxPlayers) {
  * Start an idle game
  */
 Game.prototype.handleStart = function (playerId, redis) {
-  if (!this.player.get(playerId).host) {
+  if (this.state !== 0) {
+    throw new Error('Game in progress.');
+  }
+
+  if (!this.players.get(playerId).host) {
     throw new Error("Not host. Can't start game");
   }
 
@@ -54,14 +58,9 @@ Game.prototype.handleStart = function (playerId, redis) {
     throw new Error("Not enough players. Can't start game");
   }
 
-  if (this.state !== 0) {
-    throw new Error('Game in progress.');
-  }
-
   const fullHandSize = 10;
-  const numPlayers = Object.keys(this.players).length;
-  const targetPoints = 5;
-  const totalRounds = numPlayers * (targetPoints - 1) + targetPoints;
+  const numPlayers = Array.from(this.players.keys()).length;
+  const totalRounds = numPlayers * (this.goal - 1) + this.goal;
   const numWhiteCards = numPlayers * totalRounds;
   this.questionCards = redis.getQuestionCards(totalRounds, true);
   this.answerCards = redis.getAnswerCards(numWhiteCards, true);
@@ -70,7 +69,7 @@ Game.prototype.handleStart = function (playerId, redis) {
 
   // console.log("BOARD: " + JSON.stringify(this.board, undefined, 2))
   this.board.currentQuestionCard = this.questionCards.pop();
-  this.players = this.replenishHand(this.players, fullHandSize);
+  this.replenishHand(fullHandSize);
   this.pickCzar();
   this.state = 1;
   Array.from(this.players.values()).forEach((p) => {
@@ -86,9 +85,10 @@ Game.prototype.handleStart = function (playerId, redis) {
  */
 Game.prototype.handleJoin = function (ws, host) {
   let player = createPlayer(ws);
+  player.host = host;
+  this.players.set(player.playerId, player);
   player = omit(player, 'ws');
 
-  player.host = host;
   ws.send(
     JSON.stringify({
       event: 'joinGame',
@@ -102,6 +102,7 @@ Game.prototype.handleJoin = function (ws, host) {
         maxPlayers: this.maxPlayers,
         state: this.state,
         board: this.board,
+        playerList: this.playersToList(),
       },
     })
   );
@@ -160,6 +161,7 @@ Game.prototype.handleSelect = function (playerId, cardId) {
     if (this.checkAllPlayers()) {
       this.state = 2;
       this.updateBoard();
+      this.updatePlayerList();
     }
   } else {
     // Already submitted or czar
@@ -243,7 +245,7 @@ Game.prototype.updateBoard = function () {
  * relevant to them (individual)
  */
 Game.prototype.updatePlayer = function (ws, id) {
-  if (!this.players.get[id]) {
+  if (!this.players.get(id)) {
     throw new Error('Not in game');
   }
 
@@ -263,7 +265,7 @@ Game.prototype.updatePlayer = function (ws, id) {
 Game.prototype.updatePlayerList = function () {
   const playerList = Array.from(this.players.values());
   const filteredPlayerList = playerList.map((player) =>
-    omit(player, 'hand', 'ws', 'playerId')
+    omit(player, 'hand', 'ws')
   );
   const data = {
     event: 'updatePlayerList',
@@ -277,7 +279,7 @@ Game.prototype.updatePlayerList = function () {
  * @returns
  */
 Game.prototype.pickCzar = function () {
-  const index = this.turnNum % this.players.size;
+  const index = this.board.turnNum % this.players.size;
   const player = Array.from(this.players.values())[index];
   player.status = 2;
   this.czar = player.id;
@@ -341,6 +343,10 @@ Game.prototype.cleanBoard = function () {
   this.board.currentAnswerCards = [];
   this.board.currentAnswerCardsMap = {};
   this.state = 1;
+};
+
+Game.prototype.playersToList = function () {
+  return Array.from(this.players.values()).map((p) => omit(p, 'ws', 'hand'));
 };
 
 /**
