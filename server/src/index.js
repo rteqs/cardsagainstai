@@ -139,11 +139,11 @@ function handleRequest(ws, request) {
     case 'startGame':
       try {
         currentGame = redisUtil.getGame(request.gameId);
-        currentGame.handleStart(ws, request.playerId, redisUtil);
+        currentGame.handleStart(request.playerId, redisUtil);
         redisUtil.updateGame(currentGame);
       } catch (error) {
         console.log(error);
-        ws.send({ error: error.message });
+        ws.send(JSON.stringify({ error: error.message }));
       }
       break;
 
@@ -160,7 +160,7 @@ function handleRequest(ws, request) {
         redisUtil.updateGame(currentGame);
       } catch (error) {
         console.log(error);
-        ws.send({ error: error.message });
+        ws.send(JSON.stringify({ error: error.message }));
       }
       break;
 
@@ -177,7 +177,7 @@ function handleRequest(ws, request) {
         redisUtil.updateGame(currentGame);
       } catch (error) {
         console.log(error);
-        ws.send({ error: error.message });
+        ws.send(JSON.stringify({ error: error.message }));
       }
       break;
 
@@ -196,6 +196,7 @@ function handleRequest(ws, request) {
         goal: obj.goal,
         maxPlayers: obj.maxPlayers,
         numberOfPlayer: obj.players.size,
+        players: obj.playersToList(),
       }));
       ws.send(
         JSON.stringify({

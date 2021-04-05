@@ -61,7 +61,9 @@ Game.prototype.handleStart = function (playerId, redis) {
   const fullHandSize = 10;
   const numPlayers = this.players.size;
   const totalRounds = numPlayers * (this.goal - 1) + this.goal;
-  const numWhiteCards = numPlayers * totalRounds;
+  // Average card draw = 1.14 = (470 + 67*2 + 4*3) / 541
+  // Conservative estimate, 1.3
+  const numWhiteCards = Math.ceil(numPlayers * (10 + 1.3 * totalRounds));
   this.questionCards = redis.getQuestionCards(totalRounds, true);
   this.answerCards = redis.getAnswerCards(numWhiteCards, true);
   shuffle(this.questionCards);
@@ -71,20 +73,19 @@ Game.prototype.handleStart = function (playerId, redis) {
   this.pickCzar();
   this.state = 1;
   Array.from(this.players.values()).forEach((p) => {
-    console.log(`player: ${p.playerId}`);
+    // console.log(`player: ${p.playerId}`);
     this.updatePlayer(p.ws, p.playerId);
   });
   this.updateBoard();
   this.updatePlayerList();
 
-  ws.send(
-    JSON.stringify({
-      event: 'gameStarted',
-      status: '200',
-      questionCards: redis.getCardDataFor(this.questionCards, true),
-      answerCards: redis.getCardDataFor(this.answerCards, false),
-    })
-  );
+  const data = {
+    event: 'gameStarted',
+    status: '200',
+    questionCards: redis.getCardDataFor(this.questionCards, true),
+    answerCards: redis.getCardDataFor(this.answerCards, false),
+  };
+  broadcast(Array.from(this.players.values()), data);
 };
 
 /**
@@ -99,7 +100,7 @@ Game.prototype.handleJoin = function (ws, host) {
 
   ws.send(
     JSON.stringify({
-      event: 'joinedGame',
+      event: 'joinGame',
       status: '200',
       player,
       game: {
@@ -282,7 +283,7 @@ Game.prototype.updatePlayerList = function () {
     event: 'updatePlayerList',
     filteredPlayerList,
   };
-  playerList.forEach((player) => player.ws.send(JSON.stringify(data)));
+  broadcast(playerList, data);
 };
 
 /**
@@ -358,6 +359,13 @@ Game.prototype.cleanBoard = function () {
 Game.prototype.playersToList = function () {
   return Array.from(this.players.values()).map((p) => omit(p, 'ws', 'hand'));
 };
+
+/**
+ * Broadcast data to all players
+ */
+function broadcast(playerList, data) {
+  playerList.forEach((player) => player.ws.send(JSON.stringify(data)));
+}
 
 /**
  * shuffles the deck of cards

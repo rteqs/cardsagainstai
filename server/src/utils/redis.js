@@ -51,9 +51,9 @@ function addGame(game) {
 
 function getGame(gameId) {
   if (gameId in games) {
-    return games[gameId]
+    return games[gameId];
   }
-  throw Error("Invalid gameId")
+  throw Error('Invalid gameId');
 }
 
 function getAllGames() {
@@ -98,7 +98,7 @@ function getAnswerCards(numCards, idOnly) {
 function getCardDataFor(cardIdList, useBlack) {
   const reqCardData = {};
   // console.log("cardIdList: " + cardIdList)
-  cardIdList.forEach(cardId => {
+  cardIdList.forEach((cardId) => {
     let cardData = null;
     if (useBlack) {
       cardData = blackCards.get(cardId);
@@ -120,5 +120,5 @@ module.exports = {
   getQuestionCards,
   getAnswerCards,
   getAllGames,
-  getCardDataFor
+  getCardDataFor,
 };
