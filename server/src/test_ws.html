@@ -7,7 +7,7 @@
 <button id="addNewPlayer">Add Player</button>
 <button id="startGame">Start Game</button>
 <button id="getGameObj">Get Game Obj</button>
-<button id="selectCard">Select Random Card for player</button>
+<button id="playCard">Select Random Card for player</button>
 
 <div>
   <textarea
@@ -34,28 +34,12 @@
   document.addEventListener('DOMContentLoaded', function () {
     let gameId = null;
     let playerId = null;
+    let currentGame = null
+
     let ws;
 
     function logEvent(response) {
       document.querySelector('#response').textContent += `- ${response}\n`;
-    }
-
-    function displayGame(game) {
-      // console.log(JSON.stringify(game, undefined, 2))
-      let gameRep = [];
-      gameRep.push('Game id: ' + game.gameId);
-      gameRep.push('Czar: ' + game.czar.playerId);
-      gameRep.push('Players: ');
-      game.players.forEach((player) => {
-        console.log('Player hand: ' + player.hand);
-        gameRep.push('\tPlayerId: ' + player.playerId);
-        gameRep.push('\t\tCards: ' + player.hand.join(', '));
-      });
-      gameRep.push(
-        'Question Cards: \n\t' + game.board.questionCards.join(', ')
-      );
-      gameRep.push('Answer Cards: \n\t' + game.board.answerCards.join(', '));
-      document.querySelector('#gameDisplay').textContent = gameRep.join('\n');
     }
 
     function init() {
@@ -83,25 +67,25 @@
       } else {
         gameRep.push('Czar: null');
       }
-      gameRep.push('Players: ');
-      for (let playerId of Object.keys(game.players)) {
-        let player = game.players[playerId];
-        console.log('Player hand: ' + player.hand);
-        gameRep.push('\tPlayerId: ' + playerId);
-        gameRep.push('\t\tCards: ' + player.hand.join(', '));
-      }
-      gameRep.push(
-        'Current Question Card: \n\t' + game.board.currentQuestionCard
-      );
-      gameRep.push(
-        'Current Answer Cards: \n\t' +
-          JSON.stringify(game.board.currentAnswerCardsMap, undefined, 2)
-      );
+      // gameRep.push('Players: ');
+      // for (let playerId of Object.keys(game.players)) {
+      //   let player = game.players[playerId];
+      //   console.log('Player hand: ' + player.hand);
+      //   gameRep.push('\tPlayerId: ' + playerId);
+      //   gameRep.push('\t\tCards: ' + player.hand.join(', '));
+      // }
+      // gameRep.push(
+      //   'Current Question Card: \n\t' + game.board.currentQuestionCard
+      // );
+      // gameRep.push(
+      //   'Current Answer Cards: \n\t' +
+      //     JSON.stringify(game.board.currentAnswerCardsMap, undefined, 2)
+      // );
 
-      gameRep.push(
-        'Question Cards: \n\t' + game.board.questionCards.join(', ')
-      );
-      gameRep.push('Answer Cards: \n\t' + game.board.answerCards.join(', '));
+      // gameRep.push(
+      //   'Question Cards: \n\t' + game.board.questionCards.join(', ')
+      // );
+      // gameRep.push('Answer Cards: \n\t' + game.board.answerCards.join(', '));
       document.querySelector('#gameDisplay').textContent = gameRep.join('\n');
     }
 
@@ -120,8 +104,8 @@
     document.querySelector('#getGameObj').onclick = function () {
       sendRequest('getGameObj');
     };
-    document.querySelector('#selectCard').onclick = function () {
-      sendRequest('selectCard');
+    document.querySelector('#playCard').onclick = function () {
+      sendRequest('playCard');
     };
 
     function sendRequest(requestType) {
@@ -132,7 +116,7 @@
 
       switch (requestType) {
         case 'createGame':
-          data = { requestType: requestType };
+          data = { requestType: requestType, info: {goal: 8, name:"Johnny's game"} };
           ws.send(JSON.stringify(data));
           logEvent(`Sent ${requestType} request`);
           break;
@@ -149,24 +133,24 @@
         case 'addNewPlayer':
         case 'startGame':
         case 'getGameObj':
-          data = { requestType: requestType, gameId: currentGame.gameId };
+          data = { requestType: requestType, gameId: currentGame.gameId, playerId: playerId};
           ws.send(JSON.stringify(data));
           logEvent(
             `Sent ${requestType} request to gameId:${currentGame.gameId}`
           );
           break;
-        case 'selectCard':
-          let currentPlayer = currentGame.players[currentPlayerId];
-          // console.log("currentPlayer.hand: ", currentPlayer.hand)
-          selectedCardId =
-            currentPlayer.hand[
-              Math.floor(Math.random() * currentPlayer.hand.length)
-            ];
+        case 'playCard':
+          // let currentPlayer = currentGame.players[currentPlayerId];
+          // // console.log("currentPlayer.hand: ", currentPlayer.hand)
+          // selectedCardId =
+          //   currentPlayer.hand[
+          //     Math.floor(Math.random() * currentPlayer.hand.length)
+          //   ];
           data = {
             requestType: requestType,
-            gameId: currentGame.gameId,
-            playerId: currentPlayer.playerId,
-            cardId: selectedCardId,
+            gameId: 'testGameId', //currentGame.gameId,
+            playerId: "testPlayerId", //currentPlayer.playerId,
+            // cardId: "testCardId",
           };
           ws.send(JSON.stringify(data));
           logEvent(
@@ -188,12 +172,15 @@
           logEvent('We are connected to the server!');
           break;
         case 'gameCreated':
+          console.log('response: ' + JSON.stringify(response, undefined, 2))
           currentGame = response.data.game;
+          playerId = response.player.playerId;
           logEvent(`Game created with id: ${currentGame.gameId}`);
           break;
         case 'joinedGame':
-          currentGame = response.data.game;
-          currentPlayerId = response.data.playerId;
+          currentGame = response.game;
+          currentPlayerId = response.player.playerId;
+          playerId = currentPlayerId
           logEvent(`Player created and joined with id: ${currentPlayerId}`);
           break;
         case 'newPlayerAdded':
@@ -204,11 +191,10 @@
           currentPlayerId = response.data.playerId;
           logEvent(`Player created and added with id: ${currentPlayerId}`);
           break;
-        case 'gameStarted':
-          currentGame = response.data.game;
-          // console.log(JSON.stringify(game, undefined, 2))
-          logEvent(`Started game with id ${currentGame.gameId}`);
-          break;
+        // case 'gameStarted':
+        //   console.log(JSON.stringify(response, undefined, 2))
+        //   logEvent(`Started game with id ${currentGame.gameId}`);
+        //   break;
         case 'retrievedGameObj':
           currentGame = response.data.game;
           logEvent(`Retrieved game with id ${currentGame.gameId}`);

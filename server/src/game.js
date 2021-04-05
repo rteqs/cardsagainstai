@@ -59,24 +59,32 @@ Game.prototype.handleStart = function (playerId, redis) {
   }
 
   const fullHandSize = 10;
-  const numPlayers = Array.from(this.players.keys()).length;
+  const numPlayers = this.players.size;
   const totalRounds = numPlayers * (this.goal - 1) + this.goal;
   const numWhiteCards = numPlayers * totalRounds;
   this.questionCards = redis.getQuestionCards(totalRounds, true);
   this.answerCards = redis.getAnswerCards(numWhiteCards, true);
   shuffle(this.questionCards);
   shuffle(this.answerCards);
-
-  // console.log("BOARD: " + JSON.stringify(this.board, undefined, 2))
   this.board.currentQuestionCard = this.questionCards.pop();
   this.replenishHand(fullHandSize);
   this.pickCzar();
   this.state = 1;
   Array.from(this.players.values()).forEach((p) => {
+    console.log(`player: ${p.playerId}`);
     this.updatePlayer(p.ws, p.playerId);
   });
   this.updateBoard();
   this.updatePlayerList();
+
+  ws.send(
+    JSON.stringify({
+      event: 'gameStarted',
+      status: '200',
+      questionCards: redis.getCardDataFor(this.questionCards, true),
+      answerCards: redis.getCardDataFor(this.answerCards, false),
+    })
+  );
 };
 
 /**
@@ -91,7 +99,7 @@ Game.prototype.handleJoin = function (ws, host) {
 
   ws.send(
     JSON.stringify({
-      event: 'joinGame',
+      event: 'joinedGame',
       status: '200',
       player,
       game: {
@@ -149,6 +157,9 @@ Game.prototype.handleLeave = function (ws, playerId) {
  * Handles player card selction
  */
 Game.prototype.handleSelect = function (playerId, cardId) {
+  if (!(playerId in this.players)) {
+    throw Error(`playerId ${playerId} is not valid or not part of this game`);
+  }
   const player = this.players.get(playerId);
   if (player.status === 0 && player.hand.includes(cardId)) {
     // Card not selected
@@ -288,7 +299,6 @@ Game.prototype.pickCzar = function () {
 /**
  * Deals cards to players until they have fullHandSize cards
  * @param fullHandSize Number of cards to replenish to
- * @returns map of players
  */
 Game.prototype.replenishHand = function (fullHandSize) {
   Array.from(this.players.values()).forEach((player) => {
