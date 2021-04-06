@@ -20,15 +20,22 @@ function choicePicked(player) {
   return player.status === 1;
 }
 
-function chooseCard(ws, index, player) {
+function chooseCard(ws, cardId, gameId, player) {
   if (!isCzar(player)) {
-    Api.playCard(ws, index, player);
+    Api.playCard(ws, cardId, gameId, player.playerId);
   } else {
-    Api.pickCard(ws, index, player);
+    Api.pickCard(ws, cardId, gameId, player.playerId);
   }
 }
 
-const PlayingScreen = ({ ws, playerList, player, gameState, board }) => {
+const PlayingScreen = ({
+  ws,
+  playerList,
+  player,
+  gameInfo,
+  gameState,
+  board,
+}) => {
   const [currentPicked, setCurrentPicked] = useState(-1);
 
   return (
@@ -60,7 +67,12 @@ const PlayingScreen = ({ ws, playerList, player, gameState, board }) => {
                 type="button"
                 className="confirmChoiceButton"
                 onClick={() => {
-                  chooseCard(ws, currentPicked, player);
+                  chooseCard(
+                    ws,
+                    player.hand[currentPicked],
+                    gameInfo.gameId,
+                    player
+                  );
                 }}
               >
                 Confirm Choice
@@ -94,6 +106,7 @@ PlayingScreen.propTypes = {
   playerList: PropTypes.instanceOf(Array).isRequired,
   player: PropTypes.instanceOf(Object).isRequired,
   board: PropTypes.instanceOf(Object).isRequired,
+  gameInfo: PropTypes.instanceOf(Object).isRequired,
   gameState: PropTypes.number.isRequired,
 };
 

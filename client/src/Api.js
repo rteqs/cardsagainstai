@@ -61,22 +61,24 @@ function getGameInfo() {
   };
 }
 
-function playCard(ws, cardIndex, player) {
-  console.log(cardIndex);
+function playCard(ws, cardId, gameId, playerId) {
+  console.log(cardId);
   const data = {
-    requestType: 'playWhiteCard',
-    cardPlayed: cardIndex,
-    player,
+    requestType: 'playCard',
+    cardId,
+    gameId,
+    playerId,
   };
   ws.send(JSON.stringify(data));
 }
 
-function pickCard(ws, cardIndex, player) {
-  console.log(cardIndex);
+function pickCard(ws, cardId, gameId, playerId) {
+  console.log(cardId);
   const data = {
-    requestType: 'playWhiteCard',
-    cardPlayed: cardIndex,
-    player,
+    requestType: 'pickCard',
+    cardId,
+    gameId,
+    playerId,
   };
   ws.send(JSON.stringify(data));
 }

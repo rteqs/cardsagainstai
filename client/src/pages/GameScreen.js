@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React from 'react';
+mport React from 'react';
 import '../styles/gameScreen.css';
 import WhiteCard from '../components/WhiteCardTemplate';
 import BlackCard from '../components/BlackCardTemplate';

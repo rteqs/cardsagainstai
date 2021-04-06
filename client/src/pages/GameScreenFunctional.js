@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import '../styles/gameScreen.css';
 import IdleScreen from '../components/IdleScreen';
@@ -7,7 +7,6 @@ import PlayingScreen from '../components/PlayingScreen';
 
 const GameScreen = function () {
   const ws = useSelector((state) => state.websocket.ws);
-  const game = useSelector((state) => state.game);
   const gameInfo = useSelector((state) => state.game.gameInfo);
   const playerList = useSelector((state) => state.game.playerList);
   const board = useSelector((state) => state.game.board);
@@ -34,6 +33,7 @@ const GameScreen = function () {
             ws={ws}
             playerList={playerList}
             player={player}
+            gameInfo={gameInfo}
             gameState={gameState}
             board={board}
           />

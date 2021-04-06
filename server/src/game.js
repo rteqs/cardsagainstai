@@ -158,7 +158,7 @@ Game.prototype.handleLeave = function (ws, playerId) {
  * Handles player card selction
  */
 Game.prototype.handleSelect = function (playerId, cardId) {
-  if (!(playerId in this.players)) {
+  if (!this.players.has(playerId)) {
     throw Error(`playerId ${playerId} is not valid or not part of this game`);
   }
   const player = this.players.get(playerId);
@@ -169,12 +169,18 @@ Game.prototype.handleSelect = function (playerId, cardId) {
     player.hand.splice(cardIndex, 1);
     console.log(`Selected card ${cardId} with index ${cardIndex}`);
     player.status = 1;
-    // Begin judgin phase if all players have played a card
+    // Begin judging phase if all players have played a card
     if (this.checkAllPlayers()) {
       this.state = 2;
-      this.updateBoard();
-      this.updatePlayerList();
+      Array.from(this.players.values()).forEach((p) => {
+        if (p.playerId !== playerId) {
+          this.updatePlayer(p.ws, p.playerId);
+        }
+      });
     }
+    this.updateBoard();
+    this.updatePlayer(player.ws, player.playerId);
+    this.updatePlayerList();
   } else {
     // Already submitted or czar
     throw new Error('Invalid Operation');
@@ -190,7 +196,7 @@ Game.prototype.handlePickWinningCard = function (playerId, cardId) {
   if (
     this.state === 2 &&
     player.status === 2 &&
-    this.currentAnswerCards.includes(cardId)
+    this.board.currentAnswerCards.includes(cardId)
   ) {
     const winner = this.currentAnswerCardsMap[cardId];
     winner.score += 1;
@@ -323,7 +329,7 @@ Game.prototype.addPlayer = function () {
  * 	@returns boolean
  */
 Game.prototype.checkAllPlayers = function () {
-  for (const player in this.players) {
+  for (const player of this.players.values()) {
     if (player.status === 0) {
       return false;
     }
