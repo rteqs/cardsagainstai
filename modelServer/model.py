@@ -25,18 +25,16 @@ class Net(nn.Module):
     self.fc1 = nn.Linear(layer_sizes[0], layer_sizes[1])
     self.fc2 = nn.Linear(layer_sizes[1], layer_sizes[2])
     self.fc3 = nn.Linear(layer_sizes[2], layer_sizes[3])
-    layer_variables = [self.fc1, self.fc2, self.fc3]
-    self.fcs= []
-    for i in range(len(layer_sizes) - 1):
-      self.fcs.append(layer_variables[i])
   
   def forward(self, x):
     x = self.emb(x)#.unsqueeze(0)
     # print("Embedding tensor shape:", x.shape)
-    for i in range(len(self.fcs)-1):
-      x = F.relu(self.fcs[i](x))
-    x = self.fcs[-1](x)
-    x = torch.sigmoid(x)
+    x = self.fc1(x)
+    print("after fc1:", x.shape)
+    x = F.relu(x)
+    x = F.relu(self.fc2(x))
+    x = self.fc3(x)
+    # x = torch.sigmoid(x)
     # print(x)
     # x = torch.argmax(x, dim=1)
     x = x.squeeze(dim=1)
