@@ -49,7 +49,7 @@ export default class GameScreen extends React.Component {
       }
     }
     return (
-      <div className="gameScreenWrapper">
+      <div className="gameScreenWrapper" style="background-color: blue;">
         {this.state.allPicked ? (
           this.state.isCzar ? (
             <div className="gameScreenTitle">
@@ -70,14 +70,14 @@ export default class GameScreen extends React.Component {
           </div>
         )}
 
-        <div className="gameScreenWrapperInner">
-          <div>
-            <div>The black card is:</div>
+        <div className="gameScreenWrapperInner" style="background-color: tomato;">
+          <div className="blackCardContainer">
+            <div>The black card chosen is:</div>
             <BlackCard text={this.state.blackCard.text} />
             <div>⠀⠀</div>
           </div>
-          <div className="whiteContainer">
-            <div className="whiteCardChooseContainer">
+          <div className="whiteContainer" style="background-color: Gray;">
+            <div className="whiteCardChooseContainer" style="background-color: Violet;">
               {this.state.allPicked
                 ? 'Here are all players chosen white cards'
                 : this.state.choicePicked
@@ -120,7 +120,7 @@ export default class GameScreen extends React.Component {
               </button>
             ))}
           </div>
-          <div className="gameScoreboard">
+          <div className="gameScoreboard" style="background-color: Green;">
             <div>SCOREBOARD</div>
             <hr />
             {this.state.players.map((val) => (

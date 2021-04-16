@@ -1,3 +1,4 @@
+/* eslint-disable */
 import '../styles/gameScreen.css';
 
 function WhiteCardTemplate(args) {
@@ -43,3 +44,4 @@ function WhiteCardTemplate(args) {
 }
 
 export default WhiteCardTemplate;
+/* eslint-enable */

@@ -1,18 +1,22 @@
+.blackContainer {
+    width: 100%;
+    overflow: hidden;
+}
+
 .whiteContainer { 
-    width: 60%;
     overflow-x: hidden;
 }
 
 .gameScreenWrapper {
     padding: 10vh; 
-    background-color: whitesmoke;
+    background-color: pink;
     height: 100%;
     width: 98.9vw;
     overflow-x: hidden;
 }
 
 .gameScreenWrapperInner {
-    display: inline-flex;
+    display: inline-block;
 }
 
 .gameScreenTitle {
@@ -65,7 +69,6 @@
     float: right;
     margin: 20px;
     height: 250px;
-    width: 19%;
     background-color:#fafafa;
     border-radius: 10px;
     border: 2px solid black;
