@@ -7,6 +7,7 @@ const logger = require('./utils/logger');
 
 const game = require('./game.js');
 const redisUtil = require('./utils/redis.js');
+const model = require('./model.js')
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -31,11 +32,11 @@ wss.on('connection', (ws) => {
     ws.isAlive = true;
   });
   // Receiving message from client
-  ws.on('message', (event) => {
+  ws.on('message', async (event) => {
     const request = JSON.parse(event);
     console.log('Message from server ', request);
     if (requestValid(ws, request)) {
-      handleRequest(ws, request);
+      await handleRequest(ws, request);
     }
   });
 });
@@ -53,7 +54,7 @@ function requestValid(ws, request) {
         .keys({
           info: Joi.object()
             .keys({
-              goal: Joi.string().required(),
+              goal: Joi.number().required(),
               name: Joi.string().required(),
             })
             .required(),
@@ -112,11 +113,12 @@ function requestValid(ws, request) {
   return true;
 }
 
-function handleRequest(ws, request) {
+async function handleRequest(ws, request) {
   let currentGame;
   let gameList;
   switch (request.requestType) {
     case 'createGame':
+      ws.send(JSON.stringify(await model.score(["Wow this is actually working"])))
       currentGame = game.initializeGame(
         parseInt(request.info.goal),
         request.info.name

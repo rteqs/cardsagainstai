@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/NauqGnesh/cardsagainstai#readme",
   "dependencies": {
+    "@arition/torch-js": "^0.11.0",
     "body-parser": "^1.19.0",
     "commitizen": "^4.2.3",
     "cors": "^2.8.5",
