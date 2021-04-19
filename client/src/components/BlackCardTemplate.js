@@ -1,4 +1,4 @@
-
+/* eslint-disable */
 function BlackCardTemplate(args)
 {
 	const outerDivStyle = {
@@ -43,3 +43,4 @@ function BlackCardTemplate(args)
 }
 
 export default BlackCardTemplate;
+/* eslint-enable */

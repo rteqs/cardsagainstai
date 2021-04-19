@@ -1,5 +1,6 @@
 const http = require('http');
 const WebSocket = require('ws');
+const Joi = require('joi');
 const app = require('./app');
 const config = require('./utils/config');
 const logger = require('./utils/logger');
@@ -10,7 +11,6 @@ const redisUtil = require('./utils/redis.js');
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 // const gameObjects = {} (redis)
-const Joi = require('joi');
 
 function connectClient(ws) {
   const payload = {

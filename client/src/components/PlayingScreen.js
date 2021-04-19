@@ -47,13 +47,13 @@ const PlayingScreen = ({
         isCzar={isCzar}
       />
 
-      <div className="gameScreenWrapperInner">
-        <div>
+      <div className="gameScreenWrapperInner" style={{backgroundColor: "Tomato"}}>
+        <div className="blackContainer" style={{backgroundColor: "Orange"}}>
           <div>The black card is:</div>
           <BlackCard text={board.currentQuestionCard} />
           <div>⠀⠀</div>
         </div>
-        <div className="whiteContainer">
+        <div className="whiteContainer" style={{backgroundColor: "DodgerBlue"}}>
           <div className="whiteCardChooseContainer">
             {allPicked(gameState)
               ? 'Here are all players chosen white cards'
@@ -95,7 +95,9 @@ const PlayingScreen = ({
             </button>
           ))}
         </div>
-        <ScoreBoard playerList={playerList} />
+        <div className="scoreContainer" style={{backgroundColor:"MediumSeaGreen"}}>
+          <ScoreBoard playerList={playerList} />
+	</div>
       </div>
     </div>
   );

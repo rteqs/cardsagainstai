@@ -7,6 +7,7 @@ import GameScreen from '../pages/GameScreenFunctional';
 import { wsConnect } from '../store/actions';
 import CreateGame from '../pages/CreateGame';
 import WinScreen from '../pages/WinScreen';
+import Authenticate from '../pages/Authenticate';
 // import Api from '../Api';
 
 export default function App() {
@@ -18,6 +19,8 @@ export default function App() {
       <Route path="/games/:gameID/win" component={WinScreen} />
       <Route path="/games/:gameID" component={GameScreen} />
       <Route path="/lobby" component={Lobby} />
+      <Route path="/auth" component={Authenticate} />
+      <Route path="/auth/google" component={Authenticate} />
       <Route
         path="/"
         render={() => (
