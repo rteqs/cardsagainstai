@@ -49,7 +49,7 @@ export default class GameScreen extends React.Component {
       }
     }
     return (
-      <div className="gameScreenWrapper" style="background-color: blue;">
+      <div className="gameScreenWrapper">
         {this.state.allPicked ? (
           this.state.isCzar ? (
             <div className="gameScreenTitle">
@@ -70,14 +70,25 @@ export default class GameScreen extends React.Component {
           </div>
         )}
 
-        <div className="gameScreenWrapperInner" style="background-color: tomato;">
-          <div className="blackCardContainer">
-            <div>The black card chosen is:</div>
-            <BlackCard text={this.state.blackCard.text} />
-            <div>⠀⠀</div>
+        <div className="gameScreenWrapperInner">
+	  <div className="upperScreen">
+            <div className="blackCardContainer">
+              <div>The black card chosen is:</div>
+              <BlackCard text={this.state.blackCard.text} />
+              <div>⠀⠀</div>
+            </div>
+            <div className="gameScoreboard">
+              <div>SCOREBOARD</div>
+              <hr />
+              {this.state.players.map((val) => (
+                <div>
+                  {val.name} {val.isCzar ? '(Czar)' : ''}: {val.score}
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="whiteContainer" style="background-color: Gray;">
-            <div className="whiteCardChooseContainer" style="background-color: Violet;">
+          <div className="lowerScreen">
+            <div className="whiteCardChooseContainer">
               {this.state.allPicked
                 ? 'Here are all players chosen white cards'
                 : this.state.choicePicked
@@ -118,15 +129,6 @@ export default class GameScreen extends React.Component {
               >
                 <WhiteCard text={val.text} />
               </button>
-            ))}
-          </div>
-          <div className="gameScoreboard" style="background-color: Green;">
-            <div>SCOREBOARD</div>
-            <hr />
-            {this.state.players.map((val) => (
-              <div>
-                {val.name} {val.isCzar ? '(Czar)' : ''}: {val.score}
-              </div>
             ))}
           </div>
         </div>

@@ -1,10 +1,19 @@
 .blackContainer {
+    background-color:DodgerBlue;
     width: 100%;
     overflow: hidden;
+    float: left;
 }
 
-.whiteContainer { 
+.lowerContainer {
+    background-color:Orange; 
     overflow-x: hidden;
+}
+
+.upperContainer {
+    background-color:MediumSeaGreen;
+    overflow: hidden;
+    display:flex;
 }
 
 .gameScreenWrapper {
@@ -16,6 +25,7 @@
 }
 
 .gameScreenWrapperInner {
+    background-color:tomato;
     display: inline-block;
 }
 
@@ -66,7 +76,7 @@
 
 .gameScoreboard {
     background-color: white;
-    float: right;
+    float: left;
     margin: 20px;
     height: 250px;
     background-color:#fafafa;
