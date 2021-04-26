@@ -8,6 +8,8 @@ const logger = require('./utils/logger');
 const game = require('./game.js');
 const redisUtil = require('./utils/redis.js');
 const model = require('./model.js')
+// const model2 = require('./model2.js')
+
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -23,6 +25,10 @@ function connectClient(ws) {
 wss.on('connection', (ws) => {
   ws.isAlive = true;
   console.log('client connected');
+  
+  model.run_through_distilBert();
+  model.tokenize()
+  // model2.test()
   connectClient(ws);
   // Closing connection
   ws.on('close', () => console.log('Closed connection with client'));
