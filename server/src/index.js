@@ -1,5 +1,4 @@
 const http = require('http');
-const WebSocket = require('ws');
 const Joi = require('joi');
 const app = require('./app');
 const config = require('./utils/config');
@@ -9,40 +8,36 @@ const game = require('./game.js');
 const redisUtil = require('./utils/redis.js');
 
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const io = require('socket.io')(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+  },
+});
+
 // const gameObjects = {} (redis)
 
-function connectClient(ws) {
-  const payload = {
-    event: 'connected',
-  };
-  ws.send(JSON.stringify(payload));
+function connectClient(socket) {
+  socket.emit('connected');
 }
 
-wss.on('connection', (ws) => {
-  ws.isAlive = true;
+io.on('connection', (socket) => {
   console.log('client connected');
-  connectClient(ws);
+  connectClient(socket);
   // Closing connection
-  ws.on('close', () => console.log('Closed connection with client'));
-  // Checking if connection is alive
-  ws.on('pong', () => {
-    // console.log('pong');
-    ws.isAlive = true;
-  });
-  // Receiving message from client
-  ws.on('message', (event) => {
+  socket.on('disconnect', () => console.log('Closed connection with client'));
+  socket.on('message', (event) => {
     const request = JSON.parse(event);
     console.log('Message from server ', request);
-    if (requestValid(ws, request)) {
-      handleRequest(ws, request);
+    if (requestValid(socket, request)) {
+      handleRequest(socket, request);
     }
   });
 });
 
-function requestValid(ws, request) {
+function requestValid(socket, request) {
   if (!request.requestType) {
-    ws.send(JSON.stringify({ error: 'requestType missing' }));
+    socket.emit('error', { error: 'requestType missing' });
     return false;
   }
 
@@ -95,24 +90,22 @@ function requestValid(ws, request) {
       break;
 
     default:
-      ws.send(
-        JSON.stringify({
-          error: `Unknown requestType "${request.requestType}"`,
-        })
-      );
+      socket.emit('error', {
+        error: `Unknown requestType "${request.requestType}"`,
+      });
       return false;
   }
 
   const errorMessage = schema.validate(request, { stripUnknown: true }).error;
 
   if (errorMessage) {
-    ws.send(JSON.stringify({ error: errorMessage }));
+    socket.emit('error', { error: errorMessage });
     return false;
   }
   return true;
 }
 
-function handleRequest(ws, request) {
+function handleRequest(socket, request) {
   let currentGame;
   let gameList;
   switch (request.requestType) {
@@ -121,7 +114,7 @@ function handleRequest(ws, request) {
         parseInt(request.info.goal),
         request.info.name
       );
-      currentGame.handleJoin(ws, true);
+      currentGame.handleJoin(socket, true);
       redisUtil.addGame(currentGame);
       break;
 
@@ -129,10 +122,10 @@ function handleRequest(ws, request) {
       try {
         currentGame = redisUtil.getGame(request.gameId);
       } catch (error) {
-        ws.send(JSON.stringify({ error: error.message }));
+        socket.emit(JSON.stringify({ error: error.message }));
         break;
       }
-      currentGame.handleJoin(ws, false);
+      currentGame.handleJoin(socket, false);
       redisUtil.updateGame(currentGame);
       break;
 
@@ -143,7 +136,7 @@ function handleRequest(ws, request) {
         redisUtil.updateGame(currentGame);
       } catch (error) {
         console.log(error);
-        ws.send(JSON.stringify({ error: error.message }));
+        socket.emit(JSON.stringify({ error: error.message }));
       }
       break;
 
@@ -151,7 +144,7 @@ function handleRequest(ws, request) {
       try {
         currentGame = redisUtil.getGame(request.gameId);
         currentGame.handleSelect(request.playerId, request.cardId);
-        ws.send(
+        socket.emit(
           JSON.stringify({
             event: 'playCard',
             status: '200',
@@ -160,7 +153,7 @@ function handleRequest(ws, request) {
         redisUtil.updateGame(currentGame);
       } catch (error) {
         console.log(error);
-        ws.send(JSON.stringify({ error: error.message }));
+        socket.emit(JSON.stringify({ error: error.message }));
       }
       break;
 
@@ -168,7 +161,7 @@ function handleRequest(ws, request) {
       try {
         currentGame = redisUtil.getGame(request.gameId);
         currentGame.handlePickWinningCard(request.playerId, request.cardId);
-        ws.send(
+        socket.emit(
           JSON.stringify({
             event: 'pickCard',
             status: '200',
@@ -177,13 +170,13 @@ function handleRequest(ws, request) {
         redisUtil.updateGame(currentGame);
       } catch (error) {
         console.log(error);
-        ws.send(JSON.stringify({ error: error.message }));
+        socket.emit(JSON.stringify({ error: error.message }));
       }
       break;
 
     case 'leave':
       currentGame = redisUtil.getGame(request.gameId);
-      currentGame.handleLeave(ws, request.playerId);
+      currentGame.handleLeave(socket, request.playerId);
 
       redisUtil.updateGame(currentGame);
       break;
@@ -198,13 +191,10 @@ function handleRequest(ws, request) {
         numberOfPlayer: obj.players.size,
         players: obj.playersToList(),
       }));
-      ws.send(
-        JSON.stringify({
-          event: 'getGameList',
-          status: '200',
-          gameList,
-        })
-      );
+      socket.emit('getGameList', {
+        status: '200',
+        gameList,
+      });
       break;
 
     default:
@@ -212,15 +202,15 @@ function handleRequest(ws, request) {
   }
 }
 
-// Ping clients every 10 seconds
-setInterval(() => {
-  wss.clients.forEach((ws) => {
-    if (!ws.isAlive) return ws.terminate();
-    // console.log('ping');
-    ws.isAlive = false;
-    ws.ping(null, false, true);
-  });
-}, 10000);
+// Ping clients every 10 seconds (Socket.io does this for us)
+// setInterval(() => {
+//   wss.clients.forEach((ws) => {
+//     if (!ws.isAlive) return ws.terminate();
+//     // console.log('ping');
+//     ws.isAlive = false;
+//     ws.ping(null, false, true);
+//   });
+// }, 10000);
 
 // const port = process.env.PORT || 8080;
 server.listen(config.PORT, () => {

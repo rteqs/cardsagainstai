@@ -74,7 +74,7 @@ Game.prototype.handleStart = function (playerId, redis) {
   this.state = 1;
   Array.from(this.players.values()).forEach((p) => {
     // console.log(`player: ${p.playerId}`);
-    this.updatePlayer(p.ws, p.playerId);
+    this.updatePlayer(p.socket, p.playerId);
   });
   this.updateBoard();
   this.updatePlayerList();
@@ -92,29 +92,26 @@ Game.prototype.handleStart = function (playerId, redis) {
  * Add new player and update other players
  * @returns boolean
  */
-Game.prototype.handleJoin = function (ws, host) {
-  let player = createPlayer(ws);
+Game.prototype.handleJoin = function (socket, host) {
+  let player = createPlayer(socket);
   player.host = host;
   this.players.set(player.playerId, player);
-  player = omit(player, 'ws');
+  player = omit(player, 'socket');
 
-  ws.send(
-    JSON.stringify({
-      event: 'joinGame',
-      status: '200',
-      player,
-      game: {
-        gameId: this.gameId,
-        name: this.name,
-        goal: this.goal,
-        czar: this.czar,
-        maxPlayers: this.maxPlayers,
-        state: this.state,
-        board: this.board,
-        playerList: this.playersToList(),
-      },
-    })
-  );
+  socket.emit('joinGame', {
+    status: '200',
+    player,
+    game: {
+      gameId: this.gameId,
+      name: this.name,
+      goal: this.goal,
+      czar: this.czar,
+      maxPlayers: this.maxPlayers,
+      state: this.state,
+      board: this.board,
+      playerList: this.playersToList(),
+    },
+  });
   this.updatePlayerList();
 };
 
@@ -122,7 +119,7 @@ Game.prototype.handleJoin = function (ws, host) {
  * Removes player and update other players
  * @returns boolean
  */
-Game.prototype.handleLeave = function (ws, playerId) {
+Game.prototype.handleLeave = function (socket, playerId) {
   const player = this.players.get(playerId);
   if (!player) {
     throw new Error('not in game');
@@ -130,12 +127,9 @@ Game.prototype.handleLeave = function (ws, playerId) {
   const { status } = player;
   this.players.delete(playerId);
   this.updatePlayerList();
-  ws.send(
-    JSON.stringify({
-      event: 'leave',
-      status: '200',
-    })
-  );
+  socket.emit('leave', {
+    status: '200',
+  });
 
   if (status === 1) {
     const [cid, pid] = Object.entries(this.currentAnswerCardsMap).find((arr) =>
@@ -145,8 +139,7 @@ Game.prototype.handleLeave = function (ws, playerId) {
     this.updateBoard();
   } else if (status === 2) {
     console.log('Czar leaving');
-    ws.send({
-      event: 'broadcast message',
+    socket.emit('broadcast message', {
       message: 'Czar left the game. Refunding cards.',
     });
     this.cleanBoard();
@@ -196,13 +189,12 @@ Game.prototype.handlePickWinningCard = function (playerId, cardId) {
     winner.score += 1;
     const event = winner.score === this.goal ? 'gameOver' : 'win';
     const data = {
-      event,
       player: winner.id,
       card: cardId,
     };
 
     Array.from(this.players.values()).forEach((p) => {
-      p.ws.send(JSON.stringify(data));
+      p.socket.emit(event, data);
     });
 
     const twentySeconds = 20 * 1000;
@@ -213,7 +205,7 @@ Game.prototype.handlePickWinningCard = function (playerId, cardId) {
     }
     setTimeout(() => {
       Array.from(this.players.values()).forEach((p) => {
-        this.updatePlayer(p.ws, p.playerId);
+        this.updatePlayer(p.socket, p.playerId);
       });
       this.updateBoard();
     }, twentySeconds);
@@ -244,11 +236,10 @@ Game.prototype.handleGameOver = function () {
  */
 Game.prototype.updateBoard = function () {
   const data = {
-    event: 'updateBoard',
     board: this.board,
   };
   Array.from(this.players.values()).forEach((player) => {
-    player.ws.send(JSON.stringify(data));
+    player.socket.emit('updateBoard', data);
   });
 };
 
@@ -256,19 +247,18 @@ Game.prototype.updateBoard = function () {
  * Update player on information about the game
  * relevant to them (individual)
  */
-Game.prototype.updatePlayer = function (ws, id) {
+Game.prototype.updatePlayer = function (socket, id) {
   if (!this.players.get(id)) {
     throw new Error('Not in game');
   }
 
-  const player = omit(this.players.get(id), 'ws');
+  const player = omit(this.players.get(id), 'socket');
   const data = {
-    event: 'updatePlayer',
     state: this.state,
     czar: this.czar,
     player,
   };
-  ws.send(JSON.stringify(data));
+  socket.emit('updatePlayer', data);
 };
 
 /**
@@ -277,7 +267,7 @@ Game.prototype.updatePlayer = function (ws, id) {
 Game.prototype.updatePlayerList = function () {
   const playerList = Array.from(this.players.values());
   const filteredPlayerList = playerList.map((player) =>
-    omit(player, 'hand', 'ws')
+    omit(player, 'hand', 'socket')
   );
   const data = {
     event: 'updatePlayerList',
@@ -357,14 +347,17 @@ Game.prototype.cleanBoard = function () {
 };
 
 Game.prototype.playersToList = function () {
-  return Array.from(this.players.values()).map((p) => omit(p, 'ws', 'hand'));
+  return Array.from(this.players.values()).map((p) =>
+    omit(p, 'socket', 'hand')
+  );
 };
 
 /**
  * Broadcast data to all players
  */
 function broadcast(playerList, data) {
-  playerList.forEach((player) => player.ws.send(JSON.stringify(data)));
+  const { event, ...payload } = { ...data };
+  playerList.forEach((player) => player.socket.emit(event, payload));
 }
 
 /**

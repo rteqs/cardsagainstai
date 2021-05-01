@@ -1,3 +1,5 @@
+const io = require("socket.io-client");
+
 function getActiveGames(ws) {
   const req = {
     type: 'message',
@@ -91,7 +93,7 @@ function waitForOpenConnection(socket) {
       if (currentAttempt > maxNumberOfAttempts - 1) {
         clearInterval(interval);
         reject(new Error('Maximum number of attempts exceeded'));
-      } else if (socket.readyState === socket.OPEN) {
+      } else if (socket.connected) {
         clearInterval(interval);
         resolve();
       }
@@ -101,9 +103,9 @@ function waitForOpenConnection(socket) {
 }
 
 async function connectToServer() {
-  const ws = new WebSocket('ws://localhost:8080');
-  await waitForOpenConnection(ws);
-  return ws;
+  const socket = io('ws://localhost:8080');
+  await waitForOpenConnection(socket);
+  return socket;
 }
 
 export default {

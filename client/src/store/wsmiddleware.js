@@ -1,4 +1,4 @@
-/* eslint-disable*/
+/* eslint-disable */
 import * as actions from './actions';
 import history from '../history';
 import Api from '../Api';
@@ -10,12 +10,12 @@ const socketMiddleware = () => {
     store.dispatch(actions.wsDisconnected());
   };
 
-  const onMessage = (store) => (event) => {
-    const payload = JSON.parse(event.data);
+  const onMessage = (store) => (event, ...args) => {
+    const payload = args[0];
     console.log('receiving server message');
     console.log(payload);
 
-    switch (payload.event) {
+    switch (event) {
       case 'joinGame':
         console.log('Joining game');
         const { game } = payload;
@@ -67,8 +67,8 @@ const socketMiddleware = () => {
         socket = await Api.connectToServer();
 
         // websocket handlers
-        socket.onmessage = onMessage(store);
-        socket.onclose = onClose(store);
+        socket.on('disconnect', onClose(store));
+        socket.onAny(onMessage(store));
         store.dispatch(actions.wsConnected(socket));
         break;
 
