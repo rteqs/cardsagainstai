@@ -29,3 +29,4 @@ modelServer/venv/
 modelServer/__pycache__/
 server/resources/models/April17Model.pt
 server/resources/models/traced_distilbert.pt
+server/resources/models/traced_mobilebert_net_wrapper.pt

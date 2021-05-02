@@ -1,7 +1,10 @@
 var torchjs = require('@arition/torch-js');
 // model_path = './resources/models/April17Model.pt'
 // model_path = './resources/models/simple_script_cpu_2021-04-18_09-45.pt' //simple_script_2021-04-18_09-18.pt'
-model_path = './resources/models/traced_distilbert.pt'
+// model_path = './resources/models/traced_distilbert.pt'
+// model_path = './resources/models/traced_mobilebert (1).pt'
+model_path = './resources/models/traced_mobilebert_net_wrapper.pt'
+
 const fs = require('fs')
 fs.stat(model_path, (err, stats) => {
   if (err) {
@@ -38,13 +41,12 @@ async function run_through_distilBert() {
 }
 
 
-
 const tokenizers = require('tokenizers')
 // import {BertWordPieceTokenizer} from "tokenizers";
-async function tokenize() {
+async function tokenize(text) {
   // Got vocab file from https://github.com/microsoft/SDNet/blob/master/bert_vocab_files/bert-base-uncased-vocab.txt
   const wordPieceTokenizer = await tokenizers.BertWordPieceTokenizer.fromOptions({ vocabFile: "./resources/models/bert-base-uncased-vocab.txt" });
-  const wpEncoded = await wordPieceTokenizer.encode("Who is John?", "John is a teacher");
+  const wpEncoded = await wordPieceTokenizer.encode(text);
   
   console.log(wpEncoded.length);
   console.log(typeof wpEncoded.tokens);
@@ -55,10 +57,29 @@ async function tokenize() {
   console.log(wpEncoded.specialTokensMask);
   console.log(wpEncoded.typeIds);
   console.log(wpEncoded.wordIndexes);
+  return wpEncoded.ids
+}
+
+async function get_mobile_bert_embs(text) {
+  var tokens_array = await tokenize(text)
+  console.log("tokens_array\n", tokens_array)
+  var bert_tokens_tensor = torchjs.tensor([tokens_array])
+  console.log(bert_tokens_tensor.toObject())
+  let output = await script_module.forward(bert_tokens_tensor)
+  // let output = await script_module.forward(torchjs.tensor([[0, 0, 0, 0, 0]], {
+  //   dtype: torchjs.Long,
+  // }), torchjs.tensor([[0, 0, 0, 0, 0]], {
+  //   dtype: torchjs.long,
+  // }))
+  // console.log(output[0].toObject(), output[1])
+  embedding = output[0].toObject()['data']
+  console.log(embedding)
+  return embedding
 }
 
 module.exports = {
     score,
     run_through_distilBert,
-    tokenize
+    tokenize,
+    get_mobile_bert_embs
 };  

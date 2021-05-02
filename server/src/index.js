@@ -26,9 +26,10 @@ wss.on('connection', (ws) => {
   ws.isAlive = true;
   console.log('client connected');
   
-  model.run_through_distilBert();
-  model.tokenize()
+  // model.run_through_distilBert();
+  // model.tokenize()
   // model2.test()
+  model.get_mobile_bert_embs("Hello, my dog is cute")
   connectClient(ws);
   // Closing connection
   ws.on('close', () => console.log('Closed connection with client'));
