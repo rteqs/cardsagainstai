@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             // "module": "flask",
-            "pythonPath": "${workspaceRoot}/modelServer/venv/Scripts/python.exe",
+            "python": "${workspaceRoot}/modelServer/venv/Scripts/python.exe",
             "program": "${workspaceRoot}/modelServer/app.py",
             "cwd": "${workspaceRoot}/modelServer"
             // "env": {

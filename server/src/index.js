@@ -29,7 +29,7 @@ wss.on('connection', (ws) => {
   // model.run_through_distilBert();
   // model.tokenize()
   // model2.test()
-  model.get_mobile_bert_embs("Hello, my dog is cute")
+  model.score("Hello, my dog is cute")
   connectClient(ws);
   // Closing connection
   ws.on('close', () => console.log('Closed connection with client'));
