@@ -26,7 +26,6 @@ export default function App() {
       <Route
         path="/"
         render={() => (
-          <meta name="google-signin-client_id" content="1079919932041-6lp67a32pntnsej5p56icgtlrsegs1co.apps.googleusercontent.com">
           <div>
             <div className="pageNavbar">CARDS AGAINST AI</div>
             <div className="pageWrapper">
