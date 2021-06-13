@@ -13,6 +13,7 @@ function WhiteCardTemplate(args) {
     transition: 'rotation .1s ease-in-out',
     border: '1px solid black',
   };
+
   const innerDivStyle = {
     marginRight: '10px',
     marginLeft: '10px',
@@ -24,6 +25,7 @@ function WhiteCardTemplate(args) {
     fontSize: 'xlarge',
     fontFamily: 'Helvetica',
   };
+
   console.log(args);
   return (
     <div className="gameWhiteCard" style={outerDivStyle}>
@@ -31,9 +33,7 @@ function WhiteCardTemplate(args) {
         <header>
           <p>{args.text}</p>
         </header>
-        <div
-          style={{ position: 'absolute', bottom: 0, left: 0, margin: '13px' }}
-        >
+        <div style={{ position: 'absolute', bottom: 0, left: 0, margin: '13px' }}>
           <div style={whiteCardText}>Cards</div>
           <div style={whiteCardText}>Against</div>
           <div style={whiteCardText}>AI</div>
