@@ -3,6 +3,7 @@ import * as actions from './actions';
 import history from '../history';
 import Api from '../Api';
 
+// FRONTEND-CLIENT: The code for handling recieving of messages and payload from server via websocket connection
 const socketMiddleware = () => {
   let socket = null;
 

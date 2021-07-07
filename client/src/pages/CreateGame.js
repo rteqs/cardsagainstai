@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import '../styles/createGame.css';
 
+// FRONTEND-CLIENT: Code to handle button to ws through Api.js interaction for creation of game screen
 function CreateGame() {
   let name = '';
   let goal = 8;

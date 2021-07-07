@@ -29,6 +29,7 @@ const GameScreen = function () {
       case 1:
       case 2:
         return (
+          // FRONTEND-CLIENT: the game components are passed in to be used by PlayingScreen
           <PlayingScreen
             ws={ws}
             playerList={playerList}

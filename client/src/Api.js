@@ -1,3 +1,5 @@
+// FRONTEND-CLIENT: This is pretty much the Frontend-Client which sends requests through websocket to the backend
+
 function getActiveGames(ws) {
   const req = {
     type: 'message',

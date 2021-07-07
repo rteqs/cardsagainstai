@@ -5,7 +5,7 @@ import '../styles/lobby-styles.css';
 import history from '../history';
 
 // TODO: MAKE GAME CARDS DYNAMIC
-
+// FRONTEND-CLIENT: Code to handle button to ws through Api.js interaction for lobby screen
 function Lobby() {
   const games = useSelector((state) => state.lobby);
   const ws = useSelector((state) => state.websocket.ws);

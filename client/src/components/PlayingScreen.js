@@ -8,6 +8,7 @@ import ScoreBoard from './ScoreBoard';
 import GameScreenTitle from './GameScreenTitle';
 import Api from '../Api';
 
+// FRONTEND-CLIENT: Code to handle button to ws through Api.js interaction for playing screen
 function allPicked(gameState) {
   return gameState === 2;
 }
@@ -28,6 +29,7 @@ function chooseCard(ws, cardId, gameId, player) {
   }
 }
 
+// FRONTEND-CLIENT: these ws, playerList,... will be passed in in GameScreenFunctional.js
 const PlayingScreen = ({
   ws,
   playerList,

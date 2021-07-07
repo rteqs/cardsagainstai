@@ -3,7 +3,7 @@ import React from 'react';
 import '../styles/winScreen.css';
 import Api from '../Api'
 
-
+// FRONTEND-CLIENT: Code to handle button to ws through Api.js interaction for win screen
 export default class GameScreen extends React.Component {
         constructor(props) {
             super(props)
