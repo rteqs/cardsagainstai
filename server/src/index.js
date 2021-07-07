@@ -112,6 +112,7 @@ function requestValid(ws, request) {
   return true;
 }
 
+// Backend client code
 function handleRequest(ws, request) {
   let currentGame;
   let gameList;
