@@ -88,7 +88,8 @@ const PlayingScreen = ({
               <div />
             )}
           </div>
-          {player.hand.map((val, index) => (
+          {!isCzar(player) ? (
+          player.hand.map((val, index) => (
             <button
               className={
                 index === currentPicked ? 'cardButtonPicked' : 'cardButton'
@@ -100,7 +101,22 @@ const PlayingScreen = ({
             >
               <WhiteCard text={val} />
             </button>
-          ))}
+          ))
+          ) : (
+            Object.keys(board.currentAnswerCardsMap).map((key, index) => (
+              <button
+                className={
+                  'cardButton'
+                }
+                onClick={() => {
+                  setCurrentPicked(index);
+                }}
+                type="button"
+              >
+                <WhiteCard text={board.currentAnswerCardsMap[key]} />
+              </button>
+            ))
+          )}
         </div>
       </div>
     </div>

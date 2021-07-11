@@ -2,6 +2,10 @@ const { v4: uuidv4 } = require('uuid');
 
 const { createPlayer } = require('./Player');
 
+// Variables for testing easily
+testing = true
+enable_player_limit = !testing
+
 function Game(goal, name, maxPlayers) {
   this.gameId = uuidv4();
   this.name = name;
@@ -54,7 +58,7 @@ Game.prototype.handleStart = function (playerId, redis) {
     throw new Error("Not host. Can't start game");
   }
 
-  if (this.players.size <= 2) {
+  if (this.players.size <= 2 && enable_player_limit) {
     throw new Error("Not enough players. Can't start game");
   }
 
