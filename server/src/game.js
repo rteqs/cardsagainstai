@@ -73,7 +73,7 @@ Game.prototype.handleStart = function (playerId, redis) {
   shuffle(this.questionCards);
   shuffle(this.answerCards);
   this.board.currentQuestionCard = this.questionCards.pop();
-  this.replenishHand(fullHandSize);
+  this.replenishHand(fullHandSize, redis);
   this.pickCzar();
   this.state = 1;
   Array.from(this.players.values()).forEach((p) => {
@@ -272,6 +272,7 @@ Game.prototype.updatePlayer = function (ws, id) {
   }
 
   const player = omit(this.players.get(id), 'ws');
+  console.log("###Player before ws.send:", player)
   const data = {
     event: 'updatePlayer',
     state: this.state,
@@ -311,10 +312,13 @@ Game.prototype.pickCzar = function () {
  * Deals cards to players until they have fullHandSize cards
  * @param fullHandSize Number of cards to replenish to
  */
-Game.prototype.replenishHand = function (fullHandSize) {
+Game.prototype.replenishHand = function (fullHandSize, redis) {
   Array.from(this.players.values()).forEach((player) => {
-    while (player.hand.length < fullHandSize) {
-      player.hand.push(this.answerCards.pop());
+    while (Object.keys(player.hand).length < fullHandSize) {
+      cardId = this.answerCards.pop()
+      cardTextObj = redis.getCardDataFor([cardId])
+      console.log('Added card ', cardId, 'to player', player.playerId)
+      player.hand[cardId] = cardTextObj[cardId]['text'];
     }
   });
 };

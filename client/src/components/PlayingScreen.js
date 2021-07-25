@@ -89,17 +89,17 @@ const PlayingScreen = ({
             )}
           </div>
           {!isCzar(player) ? (
-          player.hand.map((val, index) => (
+          Object.keys(player.hand).map((cardId) => (
             <button
               className={
-                index === currentPicked ? 'cardButtonPicked' : 'cardButton'
+                cardId === currentPicked ? 'cardButtonPicked' : 'cardButton'
               }
               onClick={() => {
-                setCurrentPicked(index);
+                setCurrentPicked(cardId);
               }}
               type="button"
             >
-              <WhiteCard text={val} />
+              <WhiteCard text={player.hand[cardId]} />
             </button>
           ))
           ) : (

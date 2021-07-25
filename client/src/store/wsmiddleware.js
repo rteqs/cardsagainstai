@@ -46,6 +46,7 @@ const socketMiddleware = () => {
         break;
 
       case 'updatePlayer':
+        console.log("###payload.player before dispatch:", payload.player)
         store.dispatch(actions.updatePlayer(payload.player));
         store.dispatch(actions.updateCzar(payload.czar));
         store.dispatch(actions.updateGameState(payload.state));
