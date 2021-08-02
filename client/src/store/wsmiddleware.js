@@ -66,7 +66,7 @@ const socketMiddleware = () => {
         }
 
         // connect to the remote host
-        socket = await Api.connectToServer();
+        socket = await Api.connectToServer(action.host);
 
         // websocket handlers
         socket.onmessage = onMessage(store);
