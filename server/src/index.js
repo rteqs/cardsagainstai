@@ -219,7 +219,7 @@ setInterval(() => {
     if (!ws.isAlive) return ws.terminate();
     // console.log('ping');
     ws.isAlive = false;
-    ws.ping(null, false, true);
+    ws.ping();
   });
 }, 10000);
 
