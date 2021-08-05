@@ -104,8 +104,8 @@ function waitForOpenConnection(socket) {
   });
 }
 
-async function connectToServer() {
-  const ws = new WebSocket('ws://localhost:8080');
+async function connectToServer(url) {
+  const ws = new WebSocket(url);
   await waitForOpenConnection(ws);
   return ws;
 }

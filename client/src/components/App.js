@@ -34,7 +34,8 @@ export default function App() {
                 className="lobbyButton"
                 type="button"
                 onClick={() => {
-                  dispatch(wsConnect('ws://localhost:8080'));
+                  const loc = window.location
+                  dispatch(wsConnect(`ws://${loc.hostname}:8080`));
                 }}
               >
                 Go to The Lobby
